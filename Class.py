@@ -86,7 +86,7 @@ class Graph:
         return self.invariant
 
 
-chomp = "C:\\Users\\paolo\\OneDrive\\Desktop\\Page-Rank-Algorithm\\"
+chomp = "C:\\Users\\paolo\\OneDrive\\Desktop\\Page-Rank-Algorithm\\Objects"
 
 def save(filename, object):
     try:

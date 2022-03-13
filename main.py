@@ -21,7 +21,7 @@ for count, tweet in enumerate(public_tweets):
 print(memo)
 """
 
-df = pd.read_csv("Users\paolo\OneDrive\Desktop\Page-Rank_Algorithm\\inter.csv")
+df = pd.read_csv("Users\paolo\OneDrive\Desktop\Page-Rank_Algorithm\Files\\inter.csv")
 
 ## mode = Retweet, Quote, Mention, Retweets
 g = Graph()
