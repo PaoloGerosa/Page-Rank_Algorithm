@@ -1,25 +1,12 @@
 from Class import *
 from Credentials import *
+from Auxiliary_Functions import *
 import pandas as pd
 
 ## Call to the API of Twitter: Tweepy
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth, wait_on_rate_limit=True)
-
-"""
-public_tweets = tweepy.Cursor(api.search_tweets, q="bitcoin", result_type="mixed", tweet_mode="extended").items(1000)
-memo = dict()
-
-for count, tweet in enumerate(public_tweets):
-    tweet_text = tweet.full_text
-    tweet_id = tweet.id
-    retweets = api.get_retweeter_ids(tweet_id)
-    memo[tweet_id] = retweets
-    print(count)
-
-print(memo)
-"""
 
 df = pd.read_csv("Users\paolo\OneDrive\Desktop\Page-Rank_Algorithm\Files\\inter.csv")
 
