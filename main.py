@@ -8,55 +8,81 @@ auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth, wait_on_rate_limit=True)
 
-df = pd.read_csv("Users\paolo\OneDrive\Desktop\Page-Rank_Algorithm\Files\\inter.csv")
+df = pd.read_csv("Users\paolo\OneDrive\Desktop\Page-Rank_Algorithm\Files\\russiaukraineconflict.csv")
+
 
 ## mode = Retweet, Quote, Mention, Retweets
 g = Graph()
-g.create_graph(df, mode = "Mention")
-save("Inter_object", g)
+#g.create_graph(df, mode = "Retweet")
+#save("Russia_object_2", g)
 
-# g = load("Russia_object")
+g = load("Russia_object")
 g.print_details()
+
+
 
 invariant = g.montecarlo(53)
 invariant = sorted(enumerate(invariant), key = lambda x: x[1], reverse = True)
 print(invariant[:5])
 
-first, inner_first = "", set()
 for i in range(10):
     try:
-        user = api.get_user(screen_name = g.reverse_users[invariant[i][0]]).name
-        if user in inner_first:
-            print((user, i))
-        print(user)
-    except:
-        user = None
+        user_name = api.get_user(screen_name = g.reverse_users[invariant[i][0]]).name
+        print(user_name)
+    except: pass
 
-    #print(len(g.inner_graph[g.reverse_users[invariant[i][0]]]))
-    if not i:
-        first = user
-        inner_first = g.inner_graph[g.reverse_users[invariant[i][0]]]
 
-memo = find_standings(api, g.users, "2022-03-12", "2022-03-10", "inter " )
-print(len(memo))
-print()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 
 """
-public_tweets = tweepy.Cursor(api.search_tweets, q="bitcoin", result_type="mixed", tweet_mode="extended").items(10)
 memo = dict()
+public_tweets = tweepy.Cursor(api.search_tweets, q="#inter", result_type = "mixed", tweet_mode = "extended", until="2022-03-12", since="2022-03-11")\
+                .items(2000)
 
+count = 1
+for aux, tweet in enumerate(public_tweets):
+    if aux%100 == 0:
+        print(aux)
+    tweet_user = tweet.user
+    name = "@"+tweet_user.screen_name
+    if name in g.users:
+        #if name in memo:
+        #    print("Repetition")
+        memo[name] = count
+        count += 1
+print(len(memo))
 
-for count, tweet in enumerate(public_tweets):
-    user = tweet.user
-    if not count:
-        print(user)
-        print(dir(user))
-
-user = api.get_user(screen_name = '@lindah56')
-print(user.screen_name)
-
-print(g.users)
+count = 0
+for i, elem in enumerate(invariant[:10]):
+    name, _ = elem
+    if g.reverse_users[name] in memo:
+        print(i)
+        count += 1
+print(count)
 """
+

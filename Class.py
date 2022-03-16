@@ -69,7 +69,7 @@ class Graph:
         print("Total number of dangling nodes: ", dangling)
 
     def montecarlo(self, start_state = 0):
-        steps = 10000
+        steps = 200000
         pi = np.array([0 for _ in range(self.count)])
         pi[start_state] = 1
         prev_state = start_state

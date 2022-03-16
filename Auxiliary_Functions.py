@@ -1,7 +1,7 @@
 import pickle
 import tweepy
 
-chomp = "C:\\Users\\paolo\\OneDrive\\Desktop\\Page-Rank-Algorithm\\Objects"
+chomp = "Users\paolo\OneDrive\Desktop\Page-Rank_Algorithm\Objects\\"
 
 def save(filename, object):
     try:
@@ -57,4 +57,23 @@ for count, tweet in enumerate(public_tweets):
     print(count)
 
 print(memo)
+"""
+
+
+
+"""
+first, inner_first = "", set()
+for i in range(10):
+    try:
+        user = api.get_user(screen_name = g.reverse_users[invariant[i][0]]).name
+        if user in inner_first:
+            print((user, i))
+        print(user)
+    except:
+        user = None
+
+    #print(len(g.inner_graph[g.reverse_users[invariant[i][0]]]))
+    if not i:
+        first = user
+        inner_first = g.inner_graph[g.reverse_users[invariant[i][0]]]
 """
