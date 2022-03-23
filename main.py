@@ -1,13 +1,14 @@
 from Class import *
 from Credentials import *
 from Auxiliary_Functions import *
-import pandas as pd
+from PubMed import *
 
 ## Call to the API of Twitter: Tweepy
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth, wait_on_rate_limit=True)
 
+"""
 df = pd.read_csv("Users\paolo\OneDrive\Desktop\Page-Rank_Algorithm\Files\\Ukraine22_03_2022.csv")
 
 ## mode = Retweet, Quote, Mention, Retweets
@@ -30,10 +31,20 @@ for i in range(10):
         print(user_name)
     except: pass
 
+"""
+
+"""
+link = constructLink("aba adhd", 1)
+soup = get_soup(link)
+text = soup.body.main.find('div', class_='inner-wrap')
+text = text.find('find', class_="search-results")
+print(text)
+"""
 
 
-
-
+articles = search("aba adhd")
+print(articles)
+print(len(articles))
 
 
 

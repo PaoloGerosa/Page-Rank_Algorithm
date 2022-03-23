@@ -107,3 +107,4 @@ class Graph:
         return self.invariant
 
 
+
