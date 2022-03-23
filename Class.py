@@ -1,5 +1,6 @@
 import numpy as np
 from copy import deepcopy
+import random
 
 class Graph:
     def __init__(self):
@@ -29,12 +30,27 @@ class Graph:
         self.graph[source].add(target)
         self.inner_graph[target].add(source)
 
-    def create_graph(self, df, mode):
+    def create_graph(self, df, mode, threshold = 0):
         new_df = df.loc[df['Kind'] == mode]
+        new_df = self.clean_df(threshold, new_df)
         for source, target in zip(new_df["Source"], new_df["Target"]):
             self.insert_node(source, target)
         self.matrix = [[0 for _ in range(self.count)] for _ in range(self.count)]
         self.create_adjacency_matrix()
+
+    def clean_df(self, threshold, df):
+        seen = set()
+        deletion = set()
+        for user in df["Source"]:
+            if user not in seen:
+                count = df.loc[df.Source == user, 'Source'].count() + df.loc[df.Target == user, 'Target'].count()
+                if count <= threshold:
+                    deletion.add(user)
+                seen.add(user)
+        for elem in deletion:
+            df = df.drop(df[df.Source != elem].index)
+            df = df.drop(df[df.Target != elem].index)
+        return df
 
     def create_adjacency_matrix(self):
         for source in self.graph:
@@ -68,15 +84,22 @@ class Graph:
 
         print("Total number of dangling nodes: ", dangling)
 
-    def montecarlo(self, start_state = 0):
+    def montecarlo(self):
         steps = 200000
         pi = np.array([0 for _ in range(self.count)])
+        start_state = random.randint(0, self.count-1)
         pi[start_state] = 1
         prev_state = start_state
-
+        alpha = 0.15
         choice = [i for i in range(self.count)]
         for i in range(steps):
-            curr_state = np.random.choice(choice, p=self.markovmatrix[:,prev_state])
+            if (i%10000 == 0):
+                print(i)
+            threshold = random.random()
+            if threshold < alpha:
+                curr_state = random.randint(0, self.count-1)
+            else:
+                curr_state = np.random.choice(choice, p=self.markovmatrix[:,prev_state])
             pi[curr_state] += 1
             prev_state = curr_state
 
