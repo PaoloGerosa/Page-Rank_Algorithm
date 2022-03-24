@@ -77,3 +77,48 @@ for i in range(10):
         first = user
         inner_first = g.inner_graph[g.reverse_users[invariant[i][0]]]
 """
+
+
+
+"""
+memo = dict()
+public_tweets = tweepy.Cursor(api.search_tweets, q="#inter", result_type = "mixed", tweet_mode = "extended", until="2022-03-12", since="2022-03-11")\
+                .items(2000)
+
+count = 1
+for aux, tweet in enumerate(public_tweets):
+    if aux%100 == 0:
+        print(aux)
+    tweet_user = tweet.user
+    name = "@"+tweet_user.screen_name
+    if name in g.users:
+        #if name in memo:
+        #    print("Repetition")
+        memo[name] = count
+        count += 1
+print(len(memo))
+
+count = 0
+for i, elem in enumerate(invariant[:10]):
+    name, _ = elem
+    if g.reverse_users[name] in memo:
+        print(i)
+        count += 1
+print(count)
+
+
+import twint
+t = twint.Config()
+t.Popular_tweets = True
+t.Search = "#ukraine"
+
+t.Pandas = True
+t.Limit = 10
+
+twint.run.Search(t)
+
+Tweets_df = twint.storage.panda.Tweets_df
+print(Tweets_df)
+"""
+
+

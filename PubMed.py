@@ -2,7 +2,8 @@ import requests
 from bs4 import BeautifulSoup
 import time
 from Class import Graph
-from Auxiliary_Functions import save, load
+from Auxiliary_Functions import save
+import pandas as pd
 
 def constructLink(search, page, mode = 1):
     term = search.replace(" ", "+")
@@ -43,7 +44,7 @@ def search(search):
     link = constructLink(search, page = 1)
     soup = get_soup(link)
     pages = get_total_page(soup)
-    articles = dict()
+    articles = []
     for page in range(1, pages+1):
         print(page)
         link = constructLink(search, page = page)
@@ -54,9 +55,8 @@ def search(search):
             article = article.find('div', class_="docsum-wrap").div.a
             further_link = article["href"].split("/")[1]
             article_name = article.text.strip()
-            if article_name not in articles:
-                articles[article_name] = set()
-    return articles
+            get_citations(further_link, articles, article_name)
+    return pd.DataFrame(articles, columns =['Source', 'Target'])
 
 def get_citations(id, articles, name):
     link = constructLink(id, page = 1, mode = 0)
@@ -71,15 +71,14 @@ def get_citations(id, articles, name):
         for article in main_text.find_all('article', class_="full-docsum"):
             article = article.find('div', class_="docsum-wrap").div.a
             article_name = article.text.strip()
-            if article_name not in articles:
-                articles[article_name] = set()
-            articles[article_name].add(name)
+            articles.append([article_name, name])
             citations.add(article_name)
 
-def pubmed_graph(search_term):
+def pubmed_graph(search_term, threshold = 0):
     articles = search(search_term)
-    g = Graph(articles)
+    g = Graph(articles, threshold = threshold)
     g.print_details()
     save(search_term, g)
+    return g
 
 

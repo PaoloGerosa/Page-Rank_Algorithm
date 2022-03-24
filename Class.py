@@ -3,37 +3,18 @@ from copy import deepcopy
 import random
 
 class Graph:
-    def __init__(self, graph = None, df = None, mode = None):
+    def __init__(self, df, mode = None, threshold = 0):
         self.count = 0
-        self.matrix = []
-        self.markovmatrix = []
         self.inner_graph = dict()
         self.users = dict()
         self.reverse_users = []
         self.column_sums = []
         self.invariant = []
-        if not graph:
-            self.graph = self.create_graph(df, mode)
-        else:
-            self.graph = graph
-            self.save_users()
-            self.matrix = [[0 for _ in range(self.count)] for _ in range(self.count)]
+        self.graph =  dict()
+        self.create_graph(df, mode, threshold)
+        self.matrix = [[0 for _ in range(self.count)] for _ in range(self.count)]
+        self.markovmatrix = []
         self.create_adjacency_matrix()
-
-    def save_users(self):
-        for source in self.graph:
-            if source not in self.users:
-                self.inner_graph[source] = set()
-                self.users[source] = self.count
-                self.reverse_users.append(source)
-                self.count += 1
-            for target in self.graph[source]:
-                if target not in self.users:
-                    self.inner_graph[target] = set()
-                    self.users[target] = self.count
-                    self.reverse_users.append(target)
-                    self.count += 1
-                self.inner_graph[target].add(source)
 
     def insert_node(self, source, target):
         if source not in self.graph:
@@ -51,8 +32,10 @@ class Graph:
         self.graph[source].add(target)
         self.inner_graph[target].add(source)
 
-    def create_graph(self, df, mode, threshold = 1):
-        new_df = df.loc[df['Kind'] == mode]
+    def create_graph(self, df, mode, threshold):
+        new_df = df
+        if mode:
+            new_df = df.loc[df['Kind'] == mode]
         new_df = self.clean_df(threshold, new_df)
         for source, target in zip(new_df["Source"], new_df["Target"]):
             self.insert_node(source, target)
@@ -75,7 +58,7 @@ class Graph:
         for source in self.graph:
             for target in self.graph[source]:
                 self.matrix[self.users[target]][self.users[source]] = 1
-        self.markovmatrix = np.array(deepcopy(self.matrix), dtype = float)
+        self.markovmatrix = np.array(deepcopy(self.matrix), dtype=float)
         self.column_sums = [sum([row[i] for row in self.matrix]) for i in range(self.count)]
 
         # 1st method
@@ -97,7 +80,7 @@ class Graph:
 
         print("Total number of dangling nodes: ", dangling)
 
-    def montecarlo(self):
+    def montecarlo(self, show = 1):
         steps = 200000
         pi = np.array([0 for _ in range(self.count)])
         start_state = random.randint(0, self.count-1)
@@ -117,50 +100,20 @@ class Graph:
             prev_state = curr_state
 
         self.invariant = pi/steps
+        if show:
+            self.print_invariant(10)
         return self.invariant
 
+    def print_invariant(self, k):
+        order_invariant = sorted(enumerate(self.invariant), key = lambda x:x[1], reverse=True)
+        if k > len(self.invariant):
+            print("Error")
+            return
+
+        for i in range(k):
+            print(self.reverse_users[order_invariant[i][0]])
 
 
 
-"""
-memo = dict()
-public_tweets = tweepy.Cursor(api.search_tweets, q="#inter", result_type = "mixed", tweet_mode = "extended", until="2022-03-12", since="2022-03-11")\
-                .items(2000)
-
-count = 1
-for aux, tweet in enumerate(public_tweets):
-    if aux%100 == 0:
-        print(aux)
-    tweet_user = tweet.user
-    name = "@"+tweet_user.screen_name
-    if name in g.users:
-        #if name in memo:
-        #    print("Repetition")
-        memo[name] = count
-        count += 1
-print(len(memo))
-
-count = 0
-for i, elem in enumerate(invariant[:10]):
-    name, _ = elem
-    if g.reverse_users[name] in memo:
-        print(i)
-        count += 1
-print(count)
-
-
-import twint
-t = twint.Config()
-t.Popular_tweets = True
-t.Search = "#ukraine"
-
-t.Pandas = True
-t.Limit = 10
-
-twint.run.Search(t)
-
-Tweets_df = twint.storage.panda.Tweets_df
-print(Tweets_df)
-"""
 
 
