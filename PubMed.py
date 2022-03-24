@@ -1,12 +1,8 @@
-import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 import time
-
-class pubmed_df:
-    def __init__(self, search):
-        self.df = pd.DataFrame(["Source", "Target"])
-        self.search = search
+from Class import Graph
+from Auxiliary_Functions import save, load
 
 def constructLink(search, page, mode = 1):
     term = search.replace(" ", "+")
@@ -43,7 +39,6 @@ def get_total_page(soup):
         pages = 0
     return pages
 
-
 def search(search):
     link = constructLink(search, page = 1)
     soup = get_soup(link)
@@ -59,10 +54,11 @@ def search(search):
             article = article.find('div', class_="docsum-wrap").div.a
             further_link = article["href"].split("/")[1]
             article_name = article.text.strip()
-            articles[article_name] = get_citations(further_link)
+            if article_name not in articles:
+                articles[article_name] = set()
     return articles
 
-def get_citations(id):
+def get_citations(id, articles, name):
     link = constructLink(id, page = 1, mode = 0)
     soup = get_soup(link)
     pages = get_total_page(soup)
@@ -75,10 +71,15 @@ def get_citations(id):
         for article in main_text.find_all('article', class_="full-docsum"):
             article = article.find('div', class_="docsum-wrap").div.a
             article_name = article.text.strip()
+            if article_name not in articles:
+                articles[article_name] = set()
+            articles[article_name].add(name)
             citations.add(article_name)
-    return citations
 
-
-
+def pubmed_graph(search_term):
+    articles = search(search_term)
+    g = Graph(articles)
+    g.print_details()
+    save(search_term, g)
 
 

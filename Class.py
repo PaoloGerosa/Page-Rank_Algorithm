@@ -3,16 +3,37 @@ from copy import deepcopy
 import random
 
 class Graph:
-    def __init__(self):
-        self.graph = dict()
-        self.inner_graph = dict()
+    def __init__(self, graph = None, df = None, mode = None):
+        self.count = 0
         self.matrix = []
         self.markovmatrix = []
+        self.inner_graph = dict()
         self.users = dict()
-        self.count = 0
         self.reverse_users = []
         self.column_sums = []
         self.invariant = []
+        if not graph:
+            self.graph = self.create_graph(df, mode)
+        else:
+            self.graph = graph
+            self.save_users()
+            self.matrix = [[0 for _ in range(self.count)] for _ in range(self.count)]
+        self.create_adjacency_matrix()
+
+    def save_users(self):
+        for source in self.graph:
+            if source not in self.users:
+                self.inner_graph[source] = set()
+                self.users[source] = self.count
+                self.reverse_users.append(source)
+                self.count += 1
+            for target in self.graph[source]:
+                if target not in self.users:
+                    self.inner_graph[target] = set()
+                    self.users[target] = self.count
+                    self.reverse_users.append(target)
+                    self.count += 1
+                self.inner_graph[target].add(source)
 
     def insert_node(self, source, target):
         if source not in self.graph:
@@ -30,13 +51,11 @@ class Graph:
         self.graph[source].add(target)
         self.inner_graph[target].add(source)
 
-    def create_graph(self, df, mode, threshold = 0):
+    def create_graph(self, df, mode, threshold = 1):
         new_df = df.loc[df['Kind'] == mode]
         new_df = self.clean_df(threshold, new_df)
         for source, target in zip(new_df["Source"], new_df["Target"]):
             self.insert_node(source, target)
-        self.matrix = [[0 for _ in range(self.count)] for _ in range(self.count)]
-        self.create_adjacency_matrix()
 
     def clean_df(self, threshold, df):
         seen = set()
@@ -48,8 +67,8 @@ class Graph:
                     deletion.add(user)
                 seen.add(user)
         for elem in deletion:
-            df = df.drop(df[df.Source != elem].index)
-            df = df.drop(df[df.Target != elem].index)
+            df = df.drop(df[df.Source == elem].index)
+            df = df.drop(df[df.Target == elem].index)
         return df
 
     def create_adjacency_matrix(self):
@@ -67,12 +86,6 @@ class Graph:
                 for j in range(self.count):
                     if self.markovmatrix[j, i]:
                         self.markovmatrix[j][i] = float(1/self.column_sums[i])
-
-        #2nd method
-        """
-        
-        """
-
 
     def print_details(self):
         print("Total number of nodes: ", len(self.graph))
@@ -106,5 +119,48 @@ class Graph:
         self.invariant = pi/steps
         return self.invariant
 
+
+
+
+"""
+memo = dict()
+public_tweets = tweepy.Cursor(api.search_tweets, q="#inter", result_type = "mixed", tweet_mode = "extended", until="2022-03-12", since="2022-03-11")\
+                .items(2000)
+
+count = 1
+for aux, tweet in enumerate(public_tweets):
+    if aux%100 == 0:
+        print(aux)
+    tweet_user = tweet.user
+    name = "@"+tweet_user.screen_name
+    if name in g.users:
+        #if name in memo:
+        #    print("Repetition")
+        memo[name] = count
+        count += 1
+print(len(memo))
+
+count = 0
+for i, elem in enumerate(invariant[:10]):
+    name, _ = elem
+    if g.reverse_users[name] in memo:
+        print(i)
+        count += 1
+print(count)
+
+
+import twint
+t = twint.Config()
+t.Popular_tweets = True
+t.Search = "#ukraine"
+
+t.Pandas = True
+t.Limit = 10
+
+twint.run.Search(t)
+
+Tweets_df = twint.storage.panda.Tweets_df
+print(Tweets_df)
+"""
 
 
