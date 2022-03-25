@@ -4,18 +4,19 @@ import random
 
 class Graph:
     def __init__(self, df, mode = None, threshold = 0):
-        self.count = 0
-        self.inner_graph = dict()
-        self.users = dict()
-        self.reverse_users = []
-        self.column_sums = []
-        self.invariant = []
-        self.graph =  dict()
+        self.count = 0                              # Number of nodes in the graph
+        self.inner_graph = dict()                   # Directed graph with inverted edges
+        self.users = dict()                         # Elements of the graph
+        self.reverse_users = []                     # Ordered users
+        self.column_sums = []                       # Sums of the boolean elements in the columns to build markovmatrix
+        self.invariant = []                         # Invariant probability distribution
+        self.graph = dict()
         self.create_graph(df, mode, threshold)
         self.matrix = [[0 for _ in range(self.count)] for _ in range(self.count)]
-        self.markovmatrix = []
+        self.markovmatrix = []                      # Numpy matrix that represents the Google matrix
         self.create_adjacency_matrix()
 
+    # Given a source node and a target node it inserts their link in the graph
     def insert_node(self, source, target):
         if source not in self.graph:
             self.graph[source] = set()
@@ -32,6 +33,7 @@ class Graph:
         self.graph[source].add(target)
         self.inner_graph[target].add(source)
 
+    # It creates the graph from a dataframe
     def create_graph(self, df, mode, threshold):
         new_df = df
         if mode:
@@ -40,6 +42,7 @@ class Graph:
         for source, target in zip(new_df["Source"], new_df["Target"]):
             self.insert_node(source, target)
 
+    # It removes from the dataframe all the nodes with number of backward link <= threshold
     def clean_df(self, threshold, df):
         seen = set()
         deletion = set()
@@ -54,6 +57,7 @@ class Graph:
             df = df.drop(df[df.Target == elem].index)
         return df
 
+    # It creates the adjacency matrix of the graph and it computes the Google matrix of the graph
     def create_adjacency_matrix(self):
         for source in self.graph:
             for target in self.graph[source]:
@@ -70,6 +74,7 @@ class Graph:
                     if self.markovmatrix[j, i]:
                         self.markovmatrix[j][i] = float(1/self.column_sums[i])
 
+    # Print some information of the graph
     def print_details(self):
         print("Total number of nodes: ", len(self.graph))
 
@@ -80,6 +85,7 @@ class Graph:
 
         print("Total number of dangling nodes: ", dangling)
 
+    # It simulates a Montecarlo Random walk to approximate the invariant probability distribution of the matrix
     def montecarlo(self, show = 1):
         steps = 200000
         pi = np.array([0 for _ in range(self.count)])
@@ -104,8 +110,9 @@ class Graph:
             self.print_invariant(10)
         return self.invariant
 
+    # It prints the first k elements of the invariant probability distribution
     def print_invariant(self, k):
-        order_invariant = sorted(enumerate(self.invariant), key = lambda x:x[1], reverse=True)
+        order_invariant = sorted(enumerate(self.invariant), key = lambda x:x[1], reverse = True)
         if k > len(self.invariant):
             print("Error")
             return

@@ -1,4 +1,4 @@
-# My Twitter App Credentials
+# Twitter App Credentials (Reserarch account)
 consumer_key = "tvZH2VyHusWSD8G36JWVphAVe"
 consumer_secret = "1K6Vx0GgMRnlPtktjUYZyvk0fWFbYyPCicSLHayHE215odI3Pv"
 
