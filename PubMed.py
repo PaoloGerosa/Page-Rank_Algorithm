@@ -50,6 +50,7 @@ def search(search):
     soup = get_soup(link)
     pages = get_total_page(soup)
     articles = []
+    standings = []
     for page in range(1, pages+1):
         print(page)
         link = constructLink(search, page = page)
@@ -60,8 +61,9 @@ def search(search):
             article = article.find('div', class_="docsum-wrap").div.a               # information of the article
             further_link = article["href"].split("/")[1]                            # id of the article
             article_name = article.text.strip()                                     # remove useless space from the name
+            standings.append(article_name)
             get_citations(further_link, articles, article_name)
-    return pd.DataFrame(articles, columns =['Source', 'Target'])
+    return pd.DataFrame(articles, columns =['Source', 'Target']), standings
 
 # Given the id of an article it finds all the citations of that article
 # The id is found in the HTML of the article
@@ -70,7 +72,7 @@ def get_citations(id, articles, name):
     link = constructLink(id, page = 1, mode = 0)
     soup = get_soup(link)
     pages = get_total_page(soup)
-    citations = set()
+    count = 0
     for page in range(1, pages+1):
         link = constructLink(id, page = page, mode = 0)
         soup = get_soup(link)
@@ -80,12 +82,14 @@ def get_citations(id, articles, name):
             article = article.find('div', class_="docsum-wrap").div.a
             article_name = article.text.strip()
             articles.append([article_name, name])
-            citations.add(article_name)
+            count += 1
+    if not count:
+        articles.append([None, name])
 
 # It generates a Graph object in the pubmed web site using a query
 def pubmed_graph(search_term, threshold = 0):
-    articles = search(search_term)
-    g = Graph(articles, threshold = threshold)
+    articles, standings = search(search_term)
+    g = Graph(articles, threshold = threshold, standings = standings)
     g.print_details()
     save(search_term, g)
     return g

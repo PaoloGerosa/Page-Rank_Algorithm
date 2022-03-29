@@ -3,13 +3,15 @@ from copy import deepcopy
 import random
 
 class Graph:
-    def __init__(self, df, mode = None, threshold = 0):
+    def __init__(self, df, mode = None, standings = None, threshold = 0):
         self.count = 0                              # Number of nodes in the graph
         self.inner_graph = dict()                   # Directed graph with inverted edges
-        self.users = dict()                         # Elements of the graph
+        self.users = dict()                         # Elements of the graph associated to their indeces in the matrix
         self.reverse_users = []                     # Ordered users
         self.column_sums = []                       # Sums of the boolean elements in the columns to build markovmatrix
         self.invariant = []                         # Invariant probability distribution
+        self.real_standings = standings             # Standings of objects in the real context (Twitter, Pubmed)
+        self.myorder = []                           # My standings according to the algorithm
         self.graph = dict()
         self.create_graph(df, mode, threshold)
         self.matrix = [[0 for _ in range(self.count)] for _ in range(self.count)]
@@ -18,20 +20,28 @@ class Graph:
 
     # Given a source node and a target node it inserts their link in the graph
     def insert_node(self, source, target):
-        if source not in self.graph:
-            self.graph[source] = set()
-            self.inner_graph[source] = set()
-            self.users[source] = self.count
-            self.reverse_users.append(source)
-            self.count += 1
-        if target not in self.graph:
-            self.graph[target] = set()
-            self.inner_graph[target] = set()
-            self.users[target] = self.count
-            self.reverse_users.append(target)
-            self.count += 1
-        self.graph[source].add(target)
-        self.inner_graph[target].add(source)
+        if source:
+            if source not in self.graph:
+                self.graph[source] = set()
+                self.inner_graph[source] = set()
+                self.users[source] = self.count
+                self.reverse_users.append(source)
+                self.count += 1
+            if target not in self.graph:
+                self.graph[target] = set()
+                self.inner_graph[target] = set()
+                self.users[target] = self.count
+                self.reverse_users.append(target)
+                self.count += 1
+            self.graph[source].add(target)
+            self.inner_graph[target].add(source)
+        else:
+            if target not in self.graph:
+                self.graph[target] = set()
+                self.inner_graph[target] = set()
+                self.users[target] = self.count
+                self.reverse_users.append(target)
+                self.count += 1
 
     # It creates the graph from a dataframe
     def create_graph(self, df, mode, threshold):
@@ -106,19 +116,32 @@ class Graph:
             prev_state = curr_state
 
         self.invariant = pi/steps
+        order = sorted(enumerate(self.invariant), key=lambda x: x[1], reverse=True)
+        myorder = [self.reverse_users[order[i][0]] for i in range(self.count)]
+
+        if self.real_standings:                      # Since the graph can consider more nodes than reality
+            real_objects = set(self.real_standings)  # If there exists a real standing consider only same objects
+            for elem in myorder:
+                if elem in real_objects:
+                    self.myorder.append(elem)
+            print(len(self.real_standings))
+            print(len(self.myorder))
+        else:
+            self.myorder = myorder
+
         if show:
             self.print_invariant(10)
         return self.invariant
 
     # It prints the first k elements of the invariant probability distribution
-    def print_invariant(self, k):
-        order_invariant = sorted(enumerate(self.invariant), key = lambda x:x[1], reverse = True)
-        if k > len(self.invariant):
+    def print_invariant(self, k = 10):
+        if not self.myorder or k > len(self.myorder):
             print("Error")
             return
 
         for i in range(k):
-            print(self.reverse_users[order_invariant[i][0]])
+            print(self.myorder[i])
+
 
 
 
