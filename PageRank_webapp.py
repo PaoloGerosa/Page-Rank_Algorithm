@@ -13,7 +13,7 @@ def get_link(id):
 chomp = ""
 
 # Save an object of the class graph locally
-def save(filename, object, mode):
+def save(filename, object):
     try:
         file_to_store = open(chomp + filename + ".pickle", "wb")
         pickle.dump(object, file_to_store)
@@ -24,11 +24,11 @@ def save(filename, object, mode):
         print("Error during storing data (Possibly unsupported):", ex)
 
 # Load an object of the class graph locally
-def load(filename, mode):
+def load(filename):
     try:
         file_to_read = open(chomp + filename + ".pickle", "rb")
         loaded_object = pickle.load(file_to_read)
-        print(type(loaded_object))
+        st.write(loaded_object.count)
 
         file_to_read.close()
         return loaded_object
@@ -65,7 +65,7 @@ query = st.selectbox(
 algorithms = st.selectbox("Choose Algorithm",("Algorithm 1", "Algorithm 2", "Algorithm 3"))
 
 if query and algorithms:
-    g = load(query, "pubmed")
+    g = load(query)
     if algorithms == "Algorithm 1":
         rank = g.real_standings
     elif algorithms == "Algorithm 2":
