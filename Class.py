@@ -1,6 +1,7 @@
 import numpy as np
 from copy import deepcopy
 import random
+import scipy.stats as stats
 
 class Graph:
     def __init__(self, df, mode = None, standings = None, threshold = 0):
@@ -12,11 +13,16 @@ class Graph:
         self.invariant = []                         # Invariant probability distribution
         self.real_standings = standings             # Standings of objects in the real context (Twitter, Pubmed)
         self.myorder = []                           # My standings according to the algorithm
+        self.combo_order = []                       # In PubMed Standings according to the algorithm combination of PageRank and Best Match sort
+        self.links = dict()                         # When the network comes from PubMed it creates the links of the articles,
+        self.authors = dict()                       # it creates the authors and descriptions for each article
+        self.descriptions = dict()
         self.graph = dict()
         self.create_graph(df, mode, threshold)
         self.matrix = [[0 for _ in range(self.count)] for _ in range(self.count)]
         self.markovmatrix = []                      # Numpy matrix that represents the Google matrix
         self.create_adjacency_matrix()
+        self.link = dict()
 
     # Given a source node and a target node it inserts their link in the graph
     def insert_node(self, source, target):
@@ -96,20 +102,34 @@ class Graph:
         print("Total number of dangling nodes: ", dangling)
 
     # It simulates a Montecarlo Random walk to approximate the invariant probability distribution of the matrix
-    def montecarlo(self, show = 1):
+    def montecarlo(self, show = 1, query = None):
         steps = 200000
         pi = np.array([0 for _ in range(self.count)])
         start_state = random.randint(0, self.count-1)
         pi[start_state] = 1
         prev_state = start_state
         alpha = 0.15
+        beta = 0.3
         choice = [i for i in range(self.count)]
+        if self.real_standings:
+            query_words = set(query.split())
+            personalized_vector = [0 for _ in range(self.count)]
+            total = 0
+            for i, elem in enumerate(self.real_standings):
+                for word in query_words:
+                    if word in elem:
+                        personalized_vector[self.users[elem]] += beta
+                personalized_vector[self.users[elem]] += float(1/(i+1))
+                total += personalized_vector[self.users[elem]]
+            personalized_vector = [val / total for val in personalized_vector]
+        else:
+            personalized_vector = [1/self.count for _ in range(self.count)]
         for i in range(steps):
             if (i%10000 == 0):
                 print(i)
             threshold = random.random()
             if threshold < alpha:
-                curr_state = random.randint(0, self.count-1)
+                curr_state = np.random.choice(choice, p=personalized_vector)
             else:
                 curr_state = np.random.choice(choice, p=self.markovmatrix[:,prev_state])
             pi[curr_state] += 1
@@ -121,17 +141,32 @@ class Graph:
 
         if self.real_standings:                      # Since the graph can consider more nodes than reality
             real_objects = set(self.real_standings)  # If there exists a real standing consider only same objects
+            self.myorder = []
             for elem in myorder:
                 if elem in real_objects:
                     self.myorder.append(elem)
-            print(len(self.real_standings))
-            print(len(self.myorder))
         else:
             self.myorder = myorder
 
         if show:
             self.print_invariant(10)
         return self.invariant
+
+    def compare_order(self):
+        new_order = []
+        for j in range(len(self.myorder)*2-1):
+            for k in range(j+1):
+                l = j-k
+                if l < len(self.myorder) and k < len(self.myorder) and self.myorder[l] == self.real_standings[k]:
+                    new_order.append(self.myorder[l])
+        self.combo_order = new_order
+
+        print(stats.kendalltau(self.real_standings, self.myorder))
+        print(stats.kendalltau(self.real_standings, new_order))
+
+        for i in range(10):
+            print((self.real_standings[i], self.myorder[i], new_order[i]))
+
 
     # It prints the first k elements of the invariant probability distribution
     def print_invariant(self, k = 10):
@@ -141,6 +176,12 @@ class Graph:
 
         for i in range(k):
             print(self.myorder[i])
+
+    # Only when the network is related to a PubMed query it creates a dictionary of all the links related to the URLs
+    def add_info(self, memo_links, memo_authors, memo_descriptions):
+        self.links = memo_links
+        self.authors = memo_authors
+        self.descriptions = memo_descriptions
 
 
 

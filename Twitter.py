@@ -12,16 +12,17 @@ api = tweepy.API(auth, wait_on_rate_limit=True)
 # It generates a Graph object using a twitter dataframe derived from Gephi
 def twitter_graph(df, save_term, threshold = 0):
     g = Graph(df = df, mode = "Quote", threshold = threshold)
-    save(save_term, g)
+    save(save_term, g, "twitter")
 
     g.print_details()
+    g.montecarlo()
     return g
 
 # Return the standing of users available in the first 2000 tweets according to Twitter
 def find_standings(users, until, since, search):
     memo = dict()
     chomp = " until:" + until + " since:" + since
-    public_tweets = tweepy.Cursor(api.search_tweets, q=search + chomp, result_type="mixed", tweet_mode="extended").items(2000)
+    public_tweets = tweepy.Cursor(api.search_tweets, q=search + chomp, result_type="mixed", tweet_mode="extended").items(10000)
 
     count = 1
     for aux, tweet in enumerate(public_tweets):

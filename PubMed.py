@@ -48,9 +48,13 @@ def get_total_page(soup):
 def search(search):
     link = constructLink(search, page = 1)
     soup = get_soup(link)
-    pages = get_total_page(soup)
+    pages = min(get_total_page(soup), 30)
     articles = []
+    set_of_articles = set()
     standings = []
+    memo_links = dict()
+    memo_authors = dict()
+    memo_description = dict()
     for page in range(1, pages+1):
         print(page)
         link = constructLink(search, page = page)
@@ -58,12 +62,23 @@ def search(search):
         main_text = soup.find('div', class_="search-results", id="search-results")  # useful content of the page
         main_text = main_text.find('section', class_="search-results-list")         # more focused content
         for article in main_text.find_all('article', class_="full-docsum"):         # list of articles
-            article = article.find('div', class_="docsum-wrap").div.a               # information of the article
+            article_info = article.find('div', class_="docsum-wrap")                # detailed information of the article
+            description = article_info.find('div', class_="docsum-snippet")         # description of the article
+            description = description.div.text
+            article = article_info.div.a                                            # information of the article
+            author = article_info.div.div.span.text                                 # author of the article
+            author = author.split(",")
+            author = ", ".join(author[:min(10, len(author))])
             further_link = article["href"].split("/")[1]                            # id of the article
             article_name = article.text.strip()                                     # remove useless space from the name
-            standings.append(article_name)
-            get_citations(further_link, articles, article_name)
-    return pd.DataFrame(articles, columns =['Source', 'Target']), standings
+            memo_links[article_name] = further_link                                 # It saves the link of the article
+            memo_authors[article_name] = author                                     # It saves the author of the article
+            memo_description[article_name] = description                            # It saves the description of the article
+            if article_name not in set_of_articles:
+                set_of_articles.add(article_name)
+                standings.append(article_name)
+                get_citations(further_link, articles, article_name)
+    return pd.DataFrame(articles, columns =['Source', 'Target']), standings, memo_links, memo_authors, memo_description
 
 # Given the id of an article it finds all the citations of that article
 # The id is found in the HTML of the article
@@ -81,17 +96,21 @@ def get_citations(id, articles, name):
         for article in main_text.find_all('article', class_="full-docsum"):
             article = article.find('div', class_="docsum-wrap").div.a
             article_name = article.text.strip()
-            articles.append([article_name, name])
-            count += 1
+            if name != article_name:
+                articles.append([article_name, name])
+                count += 1
     if not count:
-        articles.append([None, name])
+        articles.append([None, name])       # Add node to the graph even if there are no links towards that node
 
 # It generates a Graph object in the pubmed web site using a query
 def pubmed_graph(search_term, threshold = 0):
-    articles, standings = search(search_term)
+    articles, standings, memo_links, memo_authors, memo_descriptions = search(search_term)
     g = Graph(articles, threshold = threshold, standings = standings)
+    g.add_info(memo_links, memo_authors, memo_descriptions)
     g.print_details()
-    save(search_term, g)
+    g.montecarlo(query = search_term)
+    g.compare_order()
+    save(search_term, g, "pubmed")
     return g
 
 
