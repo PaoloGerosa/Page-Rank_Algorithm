@@ -34,6 +34,7 @@ def load(filename):
         return loaded_object
 
     except Exception as ex:
+        st.write("ciao")
         print("Error during loading data:", ex)
 
 # title and explanation in the website
