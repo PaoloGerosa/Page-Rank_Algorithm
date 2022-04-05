@@ -25,17 +25,13 @@ def save(filename, object):
 
 # Load an object of the class graph locally
 def load(filename):
-    try:
-        file_to_read = open(chomp + filename + ".pickle", "rb")
-        loaded_object = pickle.load(file_to_read)
-        st.write(loaded_object.count)
+    file_to_read = open(chomp + filename + ".pickle", "rb")
+    loaded_object = pickle.load(file_to_read)
+    st.write(loaded_object.count)
 
-        file_to_read.close()
-        return loaded_object
+    file_to_read.close()
+    return loaded_object
 
-    except Exception as ex:
-        st.write("ciao")
-        print("Error during loading data:", ex)
 
 # title and explanation in the website
 st.title("PubMed with PageRank algorithm and with Best Match sort algorithm")
