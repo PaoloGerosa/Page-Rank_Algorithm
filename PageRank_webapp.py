@@ -63,20 +63,6 @@ query = st.selectbox(
 )
 
 
-
-Formula = []
-new_chomp = chomp + "\PubMed\\"
-for elem in os.listdir(new_chomp):
-    Formula.append(elem.split(".")[0])
-# location Selectbox is the widget of the website that let the users choose the location
-
-
-query = st.selectbox(
-    'What are you looking for?',
-    (Formula)
-)
-
-
 algorithms = st.selectbox("Choose Algorithm",("Algorithm 1", "Algorithm 2", "Algorithm 3"))
 
 if query and algorithms:
