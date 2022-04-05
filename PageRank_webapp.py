@@ -10,7 +10,7 @@ def get_link(id):
     link = "https://pubmed.ncbi.nlm.nih.gov/" + str(id)
     return link
 
-chomp = "Page-Rank_Algorithm/Objects/"
+chomp = ""
 
 # Save an object of the class graph locally
 def save(filename, object, mode):
