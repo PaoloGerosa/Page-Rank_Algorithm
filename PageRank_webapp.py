@@ -28,6 +28,7 @@ def load(filename, mode):
     try:
         file_to_read = open(chomp + filename + ".pickle", "rb")
         loaded_object = pickle.load(file_to_read)
+        print(type(loaded_object))
 
         file_to_read.close()
         return loaded_object
