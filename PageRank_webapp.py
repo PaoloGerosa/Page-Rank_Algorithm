@@ -27,7 +27,6 @@ def save(filename, object):
 def load(filename):
     file_to_read = open(chomp + filename + ".pickle", "rb")
     loaded_object = pickle.load(file_to_read)
-    st.write(loaded_object.count)
 
     file_to_read.close()
     return loaded_object
