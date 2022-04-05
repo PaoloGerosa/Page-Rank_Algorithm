@@ -51,6 +51,18 @@ st.markdown(
 \n Choose a query and an algorithm; then check the results, you don't know which algorithm you are using.
 """)
 
+Formula = []
+for elem in os.listdir():
+    Formula.append(elem.split(".")[0])
+# location Selectbox is the widget of the website that let the users choose the location
+
+
+query = st.selectbox(
+    'What are you looking for?',
+    (Formula)
+)
+
+
 
 Formula = []
 new_chomp = chomp + "\PubMed\\"
