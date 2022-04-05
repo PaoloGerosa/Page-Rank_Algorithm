@@ -10,13 +10,12 @@ def get_link(id):
     link = "https://pubmed.ncbi.nlm.nih.gov/" + str(id)
     return link
 
-chomp = "Objects"
+chomp = "Objects\"
 
 # Save an object of the class graph locally
 def save(filename, object, mode):
-    new_chomp = chomp + "\Twitter\\" if mode == "twitter" else chomp + "\PubMed\\"
     try:
-        file_to_store = open(new_chomp + filename + ".pickle", "wb")
+        file_to_store = open(chomp + filename + ".pickle", "wb")
         pickle.dump(object, file_to_store)
 
         file_to_store.close()
@@ -26,9 +25,8 @@ def save(filename, object, mode):
 
 # Load an object of the class graph locally
 def load(filename, mode):
-    new_chomp = chomp + "\Twitter\\" if mode == "twitter" else chomp + "\PubMed\\"
     try:
-        file_to_read = open(new_chomp + filename + ".pickle", "rb")
+        file_to_read = open(chomp + filename + ".pickle", "rb")
         loaded_object = pickle.load(file_to_read)
 
         file_to_read.close()
