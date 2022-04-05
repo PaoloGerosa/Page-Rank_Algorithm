@@ -52,7 +52,7 @@ st.markdown(
 """)
 
 Formula = []
-for elem in os.listdir("Objects\PubMed"):
+for elem in os.listdir("Objects"):
     Formula.append(elem.split(".")[0])
 # location Selectbox is the widget of the website that let the users choose the location
 
