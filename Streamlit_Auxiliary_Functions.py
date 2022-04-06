@@ -37,6 +37,7 @@ def load(filename):
 
 # It constructs a dataframe of a network of articles-citations in pubmed given in input a search query
 def search(search, progress_bar):
+    st.write("ciao")
     link = constructLink(search, page = 1)
     soup = get_soup(link)
     pages = min(get_total_page(soup), 10)
@@ -75,7 +76,6 @@ def search(search, progress_bar):
 
 # It generates a Graph object in the pubmed web site using a query
 def pubmed_graph(search_term, progress_bar, threshold = 0):
-    st.write("ciao")
     articles, standings, memo_links, memo_authors, memo_descriptions = search(search_term, progress_bar)
     g = Graph(articles, threshold = threshold, standings = standings)
     g.add_info(memo_links, memo_authors, memo_descriptions)
