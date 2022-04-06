@@ -46,7 +46,6 @@ def search(search, progress_bar):
     memo_links = dict()
     memo_authors = dict()
     memo_description = dict()
-    st.write("ciao")
     for page in range(1, pages+1):
         st.write("ciao")
         link = constructLink(search, page = page)
@@ -70,13 +69,13 @@ def search(search, progress_bar):
                 set_of_articles.add(article_name)
                 standings.append(article_name)
                 get_citations(further_link, articles, article_name)
-        st.write("ciao")
         progress_bar.progress(page / pages)
     return pd.DataFrame(articles, columns =['Source', 'Target']), standings, memo_links, memo_authors, memo_description
 
 
 # It generates a Graph object in the pubmed web site using a query
 def pubmed_graph(search_term, progress_bar, threshold = 0):
+    st.write("ciao")
     articles, standings, memo_links, memo_authors, memo_descriptions = search(search_term, progress_bar)
     g = Graph(articles, threshold = threshold, standings = standings)
     g.add_info(memo_links, memo_authors, memo_descriptions)
