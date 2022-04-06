@@ -36,18 +36,24 @@ text_search = st.text_input("Enter the query to search", placeholder = "Type her
 if st.button("Submit"):
     result = text_search.title()
     result = result.lower()
+    result = result.strip()
     start_search = st.success(f'Starting search of {result}')
-    progress_bar = st.progress(0)
-    pubmed_graph(result, progress_bar)
-    progress_bar.empty()
+    if result not in Formula:
+        progress_bar = st.progress(0)
+        pubmed_graph(result, progress_bar)
+        progress_bar.empty()
+        Formula.append(result)
+    else:
+        time.sleep(1.5)
     start_search.empty()
     end_search = st.success(f'Congratulation, the search {result} is completed')
     time.sleep(1.5)
     end_search.empty()
     query = result
 
-if query != '<select>' and algorithms:
-    g = load(query)
+if (query != '<select>' or text_search in Formula) and algorithms:
+    search_term = query if query != '<select>' else text_search
+    g = load(search_term)
     if algorithms == "Algorithm 1":
         rank = g.real_standings
     elif algorithms == "Algorithm 2":
