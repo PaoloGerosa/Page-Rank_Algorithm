@@ -3,7 +3,7 @@ import pandas as pd
 from PubMed import constructLink, get_soup, get_total_page, get_citations
 from Class import Graph
 import streamlit as st
-chomp = "Objects//"
+chomp = "PubMed//"
 
 # important function so that the app is dynamic
 @st.cache(persist=True)
