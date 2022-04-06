@@ -82,11 +82,12 @@ def search(search, progress_bar):
     memo_authors = dict()
     memo_description = dict()
     for page in range(1, pages+1):
+        st.write("ciao")
         link = constructLink(search, page = page)
         soup = get_soup(link)
+        st.write("ciao")
         main_text = soup.find('div', class_="search-results", id="search-results")  # useful content of the page
         main_text = main_text.find('section', class_="search-results-list")         # more focused content
-        st.write("ciao")
         for article in main_text.find_all('article', class_="full-docsum"):         # list of articles
             article_info = article.find('div', class_="docsum-wrap")                # detailed information of the article
             description = article_info.find('div', class_="docsum-snippet")         # description of the article
