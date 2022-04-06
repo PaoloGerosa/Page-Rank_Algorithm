@@ -81,6 +81,7 @@ def search(search, progress_bar):
     memo_links = dict()
     memo_authors = dict()
     memo_description = dict()
+    st.write("ciao")
     st.write(pages)
     for page in range(1, pages+1):
         link = constructLink(search, page = page)
