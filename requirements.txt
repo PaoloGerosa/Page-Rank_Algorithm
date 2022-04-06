@@ -32,6 +32,5 @@ stop==0.0.12
 streamlit==1.8.1
 toml==0.10.1
 unicode==2.8
-url==0.4.2
 wrapper==1.1.0b1
 zipp==3.8.0
