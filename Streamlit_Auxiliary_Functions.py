@@ -1,4 +1,3 @@
-import pickle
 import pandas as pd
 from PubMed import constructLink, get_soup, get_total_page, get_citations
 from Class import Graph
