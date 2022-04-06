@@ -46,7 +46,9 @@ def search(search, progress_bar):
     memo_links = dict()
     memo_authors = dict()
     memo_description = dict()
+    st.write("ciao")
     for page in range(1, pages+1):
+        st.write("ciao")
         link = constructLink(search, page = page)
         soup = get_soup(link)
         main_text = soup.find('div', class_="search-results", id="search-results")  # useful content of the page
@@ -68,6 +70,7 @@ def search(search, progress_bar):
                 set_of_articles.add(article_name)
                 standings.append(article_name)
                 get_citations(further_link, articles, article_name)
+        st.write("ciao")
         progress_bar.progress(page / pages)
     return pd.DataFrame(articles, columns =['Source', 'Target']), standings, memo_links, memo_authors, memo_description
 
