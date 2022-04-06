@@ -1,5 +1,5 @@
 import pandas as pd
-from PubMed import constructLink, get_soup, get_total_page, get_citations
+from PubMed import get_soup, get_total_page, get_citations
 from Class import Graph
 import streamlit as st
 import pickle
@@ -10,6 +10,22 @@ chomp = "PubMed//"
 def get_link(id):
     link = "https://pubmed.ncbi.nlm.nih.gov/" + str(id)
     return link
+
+# It construct the link of the URL of pubmed web page using the search_term that the user is looking for
+def constructLink(search, page, mode = 1):
+    term = search.replace(" ", "+")      # In pubmed if two or more words are searched URL substitutes the space with +
+    if mode:
+        if page == 1:
+            link = f'https://pubmed.ncbi.nlm.nih.gov/?term={term}'
+        else:
+            link = f'https://pubmed.ncbi.nlm.nih.gov/?term={term}&page={page}'
+    else:
+        if page == 1:
+            link = f'https://pubmed.ncbi.nlm.nih.gov/?linkname=pubmed_pubmed_citedin&from_uid={search}'
+        else:
+            link = f'https://pubmed.ncbi.nlm.nih.gov/?linkname=pubmed_pubmed_citedin&from_uid={search}&page={page}'
+    return link
+
 
 # Save an object of the class graph locally
 def save(filename, object):
