@@ -10,7 +10,7 @@ st.title("PubMed with PageRank algorithm and with Best Match sort algorithm")
 st.markdown(
 """
 This is a demo of a Streamlit app that shows the publication results available in PubMed for different queries. \n
-Moreover it compares the ranks of the results according to three different algorithms: one in the one used by PubMed in 
+Moreover it compares the ranks of the results according to three different algorithms: one is the one used by PubMed in 
 its website, one is PageRank algorithm that is the one created by Google to rank websites and the last one is the 
 combination of the two.
 """)
@@ -57,11 +57,11 @@ if (query != '<select>' or text_search in Formula) and algorithms:
     search_term = query if query != '<select>' else text_search
     g = load(search_term)
     if algorithms == "Algorithm 1":
-        rank = g.real_standings
+        rank = g.combo_order
     elif algorithms == "Algorithm 2":
         rank = g.myorder
     else:
-        rank = g.combo_order
+        rank = g.real_standings
     rank = rank[:min(30, len(rank))]
     links = g.links
     descriptions = g.descriptions
