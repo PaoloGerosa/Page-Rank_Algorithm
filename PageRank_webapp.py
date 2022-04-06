@@ -18,7 +18,7 @@ st.markdown(
 
 
 Formula = []
-for elem in os.listdir("Objects"):
+for elem in os.listdir("PubMed"):
     Formula.append(elem.split(".")[0])
 
 query = st.selectbox(
