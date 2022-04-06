@@ -2,7 +2,14 @@ import pickle
 import pandas as pd
 from PubMed import constructLink, get_soup, get_total_page, get_citations
 from Class import Graph
+import streamlit as st
 chomp = "Objects//"
+
+# important function so that the app is dynamic
+@st.cache(persist=True)
+def get_link(id):
+    link = "https://pubmed.ncbi.nlm.nih.gov/" + str(id)
+    return link
 
 # Save an object of the class graph locally
 def save(filename, object):

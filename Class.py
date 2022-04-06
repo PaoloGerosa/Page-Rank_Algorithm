@@ -1,7 +1,6 @@
 import numpy as np
 from copy import deepcopy
 import random
-import scipy.stats as stats
 
 class Graph:
     def __init__(self, df, mode = None, standings = None, threshold = 0):
@@ -160,9 +159,6 @@ class Graph:
                 if l < len(self.myorder) and k < len(self.myorder) and self.myorder[l] == self.real_standings[k]:
                     new_order.append(self.myorder[l])
         self.combo_order = new_order
-
-        print(stats.kendalltau(self.real_standings, self.myorder))
-        print(stats.kendalltau(self.real_standings, new_order))
 
         for i in range(10):
             print((self.real_standings[i], self.myorder[i], new_order[i]))

@@ -1,14 +1,6 @@
 # Import libraries
-import streamlit as st
-import pandas as pd
 import os
 from Streamlit_Auxiliary_Functions import *
-
-# important function so that the app is dynamic
-@st.cache(persist=True)
-def get_link(id):
-    link = "https://pubmed.ncbi.nlm.nih.gov/" + str(id)
-    return link
 
 # title and explanation in the website
 st.title("PubMed with PageRank algorithm and with Best Match sort algorithm")
