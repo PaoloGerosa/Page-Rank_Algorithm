@@ -2,9 +2,21 @@
 import requests
 from bs4 import BeautifulSoup
 import time
+import pickle
 from Class import Graph
-from Auxiliary_Functions import save
 import pandas as pd
+
+chomp = "PubMed//"
+# Save an object of the class graph locally
+def save(filename, object):
+    try:
+        file_to_store = open(chomp + filename + ".pickle", "wb")
+        pickle.dump(object, file_to_store)
+
+        file_to_store.close()
+
+    except Exception as ex:
+        print("Error during storing data (Possibly unsupported):", ex)
 
 # It construct the link of the URL of pubmed web page using the search_term that the user is looking for
 def constructLink(search, page, mode = 1):
@@ -110,7 +122,7 @@ def pubmed_graph(search_term, threshold = 0):
     g.print_details()
     g.montecarlo(query = search_term)
     g.compare_order()
-    save(search_term, g, "pubmed")
+    save(search_term, g)
     return g
 
 
