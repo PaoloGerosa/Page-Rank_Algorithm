@@ -27,7 +27,6 @@ def constructLink(search, page, mode = 1):
 
 # It gets the HTML of a web page given URL
 def get_soup(URL):
-    st.write("ciao")
     source = requests.get(URL).text
     soup = BeautifulSoup(source, 'lxml')
     return soup
@@ -78,7 +77,6 @@ def search(search, progress_bar):
     for page in range(1, pages+1):
         link = constructLink(search, page = page)
         soup = get_soup(link)
-        st.write("ciao")
         main_text = soup.find('div', class_="search-results", id="search-results")  # useful content of the page
         main_text = main_text.find('section', class_="search-results-list")         # more focused content
         for article in main_text.find_all('article', class_="full-docsum"):         # list of articles
