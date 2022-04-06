@@ -1,15 +1,14 @@
 import pandas as pd
-from PubMed import get_soup, get_total_page, get_citations
-from Class import Graph
 import streamlit as st
 import pickle
+import requests
+from bs4 import BeautifulSoup
+import time
+from Class import Graph
 chomp = "PubMed//"
 
 # important function so that the app is dynamic
 @st.cache(persist=True)
-def get_link(id):
-    link = "https://pubmed.ncbi.nlm.nih.gov/" + str(id)
-    return link
 
 # It construct the link of the URL of pubmed web page using the search_term that the user is looking for
 def constructLink(search, page, mode = 1):
@@ -26,30 +25,50 @@ def constructLink(search, page, mode = 1):
             link = f'https://pubmed.ncbi.nlm.nih.gov/?linkname=pubmed_pubmed_citedin&from_uid={search}&page={page}'
     return link
 
+# It gets the HTML of a web page given URL
+def get_soup(URL):
+    while True:
+        try:
+            source = requests.get(URL).text
+            soup = BeautifulSoup(source, 'lxml')
+            break
+        except:
+            print("Connessione rifiutata dal server..")
+            print("Pausa di 5 secondi")
+            time.sleep(5)
+    return soup
 
-# Save an object of the class graph locally
-def save(filename, object):
+# It gets the integer representing the total number of pages in results for a specific query in pubmed
+def get_total_page(soup):
+    bottom = soup.find("div", class_="bottom-pagination")
     try:
-        file_to_store = open(chomp + filename + ".pickle", "wb")
-        pickle.dump(object, file_to_store)
+        text = bottom.div.find("label", class_="of-total-pages").text
+        pages = int(text.split(" ")[-1].replace(",", ""))
+    except:
+        pages = 0
+    return pages
 
-        file_to_store.close()
-
-    except Exception as ex:
-        print("Error during storing data (Possibly unsupported):", ex)
-
-# Load an object of the class graph locally
-def load(filename):
-    try:
-        file_to_read = open(chomp + filename + ".pickle", "rb")
-        loaded_object = pickle.load(file_to_read)
-
-        file_to_read.close()
-        return loaded_object
-
-    except Exception as ex:
-        print("Error during loading data:", ex)
-
+# Given the id of an article it finds all the citations of that article
+# The id is found in the HTML of the article
+# The function is similar to search because HTML is similar, but careful that in the loop we don't save same information
+def get_citations(id, articles, name):
+    link = constructLink(id, page = 1, mode = 0)
+    soup = get_soup(link)
+    pages = get_total_page(soup)
+    count = 0
+    for page in range(1, pages+1):
+        link = constructLink(id, page = page, mode = 0)
+        soup = get_soup(link)
+        main_text = soup.find('div', class_="search-results", id="search-results")
+        main_text = main_text.find('section', class_="search-results-list")
+        for article in main_text.find_all('article', class_="full-docsum"):
+            article = article.find('div', class_="docsum-wrap").div.a
+            article_name = article.text.strip()
+            if name != article_name:
+                articles.append([article_name, name])
+                count += 1
+    if not count:
+        articles.append([None, name])       # Add node to the graph even if there are no links towards that node
 
 # It constructs a dataframe of a network of articles-citations in pubmed given in input a search query
 def search(search, progress_bar):
@@ -100,4 +119,34 @@ def pubmed_graph(search_term, progress_bar, threshold = 0):
     g.compare_order()
     save(search_term, g)
     return g
+
+
+def get_link(id):
+    link = "https://pubmed.ncbi.nlm.nih.gov/" + str(id)
+    return link
+
+# Save an object of the class graph locally
+def save(filename, object):
+    try:
+        file_to_store = open(chomp + filename + ".pickle", "wb")
+        pickle.dump(object, file_to_store)
+
+        file_to_store.close()
+
+    except Exception as ex:
+        print("Error during storing data (Possibly unsupported):", ex)
+
+# Load an object of the class graph locally
+def load(filename):
+    try:
+        file_to_read = open(chomp + filename + ".pickle", "rb")
+        loaded_object = pickle.load(file_to_read)
+
+        file_to_read.close()
+        return loaded_object
+
+    except Exception as ex:
+        print("Error during loading data:", ex)
+
+
 
