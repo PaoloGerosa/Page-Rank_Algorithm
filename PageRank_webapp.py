@@ -39,7 +39,7 @@ if st.button("Submit"):
     result = text_search.title()
     result = result.lower()
     result = result.strip()
-    start_search = st.success(f'Starting search of {result}')
+    start_search = st.success(f'Starting search of {result} \n Take a cup of coffee and come back in few minutes')
     if result not in Formula:
         progress_bar = st.progress(0)
         pubmed_graph(result, progress_bar)
