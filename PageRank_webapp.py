@@ -1,6 +1,7 @@
 # Import libraries
 import os
 from Streamlit_Auxiliary_Functions import *
+import time
 
 # title and explanation in the website
 st.title("PubMed with PageRank algorithm and with Best Match sort algorithm")
@@ -16,8 +17,7 @@ st.markdown(
 \n Choose a query and an algorithm; then check the results, you don't know which algorithm you are using.
 """)
 
-
-Formula = []
+Formula = ['<select>']
 for elem in os.listdir("PubMed"):
     Formula.append(elem.split(".")[0])
 
@@ -28,7 +28,25 @@ query = st.selectbox(
 
 algorithms = st.selectbox("Choose Algorithm",("Algorithm 1", "Algorithm 2", "Algorithm 3"))
 
-if query and algorithms:
+st.write("")
+st.write("In alternative you can search new queries; this will take some time to get the data and run the algorithms")
+# Search toolbox to let users search the place that they want
+text_search = st.text_input("Enter the query to search", placeholder = "Type here...")
+# If button pressed then the search starts
+if st.button("Submit"):
+    result = text_search.title()
+    result = result.lower()
+    start_search = st.success(f'Starting search of {result}')
+    progress_bar = st.progress(0)
+    pubmed_graph(result, progress_bar)
+    progress_bar.empty()
+    start_search.empty()
+    end_search = st.success(f'Congratulation, the search {result} is completed')
+    time.sleep(1.5)
+    end_search.empty()
+    query = result
+
+if query != '<select>' and algorithms:
     g = load(query)
     if algorithms == "Algorithm 1":
         rank = g.real_standings
@@ -60,23 +78,3 @@ if query and algorithms:
     #st.markdown('<h3>Data Frame of the above search result</h3>', unsafe_allow_html=True)
     #st.dataframe(result_df)
 
-
-"""
-my_bar = st.progress(0)
-my_bar.progress(1/10)
-
-# Search toolbox to let users search the place that they want
-firstlocation = st.text_input("Enter the location to search","Type here...")
-# If button pressed then the search starts
-if st.button("Submit"):
-    result = firstlocation.title()
-    st.success(f'Ricerca iniziata su {result.capitalize()}')
-    result = result.replace(' ', '_')
-    # pagine_casa and pagine_immobiliare are the total pages to search of the different websites
-    pagine_casa = int(Casa(result, 1, 0))
-    pagine_immobiliare = int(Immobiliare(result, 1, 0))
-    tot_page = [int(pagine_casa/20) + (pagine_casa%20>0), int(pagine_immobiliare/25) + (pagine_immobiliare%25>0)]
-    # It launches the main code
-    main(0,result,tot_page)
-    data = load_data(result, columns, [])
-"""
