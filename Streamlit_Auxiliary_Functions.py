@@ -83,7 +83,6 @@ def search(search, progress_bar):
     memo_authors = dict()
     memo_description = dict()
     for page in range(1, pages+1):
-        st.write("ciao")
         link = constructLink(search, page = page)
         soup = get_soup(link)
         main_text = soup.find('div', class_="search-results", id="search-results")  # useful content of the page
