@@ -29,10 +29,12 @@ def constructLink(search, page, mode = 1):
 def get_soup(URL):
     while True:
         try:
+            st.write("ciao")
             source = requests.get(URL).text
             soup = BeautifulSoup(source, 'lxml')
             break
         except:
+            st.write("paolo")
             print("Connessione rifiutata dal server..")
             print("Pausa di 5 secondi")
             time.sleep(5)
@@ -72,11 +74,8 @@ def get_citations(id, articles, name):
 
 # It constructs a dataframe of a network of articles-citations in pubmed given in input a search query
 def search(search, progress_bar):
-    st.write("ciao")
     link = constructLink(search, page = 1)
-    st.write("ciao")
     soup = get_soup(link)
-    st.write("ciao")
     pages = min(get_total_page(soup), 10)
     articles = []
     set_of_articles = set()
@@ -84,8 +83,6 @@ def search(search, progress_bar):
     memo_links = dict()
     memo_authors = dict()
     memo_description = dict()
-    st.write("ciao")
-    st.write(pages)
     for page in range(1, pages+1):
         link = constructLink(search, page = page)
         soup = get_soup(link)
