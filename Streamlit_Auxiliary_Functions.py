@@ -73,7 +73,6 @@ def get_citations(id, articles, name):
 # It constructs a dataframe of a network of articles-citations in pubmed given in input a search query
 def search(search, progress_bar):
     link = constructLink(search, page = 1)
-    st.write("ciao")
     soup = get_soup(link)
     pages = min(get_total_page(soup), 10)
     articles = []
@@ -82,6 +81,7 @@ def search(search, progress_bar):
     memo_links = dict()
     memo_authors = dict()
     memo_description = dict()
+    st.write("ciao")
     for page in range(1, pages+1):
         link = constructLink(search, page = page)
         soup = get_soup(link)
