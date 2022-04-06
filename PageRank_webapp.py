@@ -61,3 +61,22 @@ if query and algorithms:
     #st.dataframe(result_df)
 
 
+"""
+my_bar = st.progress(0)
+my_bar.progress(1/10)
+
+# Search toolbox to let users search the place that they want
+firstlocation = st.text_input("Enter the location to search","Type here...")
+# If button pressed then the search starts
+if st.button("Submit"):
+    result = firstlocation.title()
+    st.success(f'Ricerca iniziata su {result.capitalize()}')
+    result = result.replace(' ', '_')
+    # pagine_casa and pagine_immobiliare are the total pages to search of the different websites
+    pagine_casa = int(Casa(result, 1, 0))
+    pagine_immobiliare = int(Immobiliare(result, 1, 0))
+    tot_page = [int(pagine_casa/20) + (pagine_casa%20>0), int(pagine_immobiliare/25) + (pagine_immobiliare%25>0)]
+    # It launches the main code
+    main(0,result,tot_page)
+    data = load_data(result, columns, [])
+"""
