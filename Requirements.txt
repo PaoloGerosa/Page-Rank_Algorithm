@@ -6,4 +6,3 @@ streamlit==0.60.0
 requests==2.27.1
 scipy==1.8.0
 numpy==1.18.4
-pickle
