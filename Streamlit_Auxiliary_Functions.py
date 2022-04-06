@@ -27,17 +27,9 @@ def constructLink(search, page, mode = 1):
 
 # It gets the HTML of a web page given URL
 def get_soup(URL):
-    while True:
-        try:
-            st.write("ciao")
-            source = requests.get(URL).text
-            soup = BeautifulSoup(source, 'lxml')
-            break
-        except:
-            st.write("paolo")
-            print("Connessione rifiutata dal server..")
-            print("Pausa di 5 secondi")
-            time.sleep(5)
+    st.write("ciao")
+    source = requests.get(URL).text
+    soup = BeautifulSoup(source, 'lxml')
     return soup
 
 # It gets the integer representing the total number of pages in results for a specific query in pubmed
