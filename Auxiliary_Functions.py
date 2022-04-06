@@ -1,6 +1,6 @@
 import pickle
 
-chomp = "Users\paolo\OneDrive\Desktop\Page-Rank_Algorithm\Objects"
+chomp = "Objects"
 
 # Save an object of the class graph locally
 def save(filename, object, mode):
