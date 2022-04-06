@@ -6,10 +6,10 @@ from Auxiliary_Functions import *
 
 df = pd.read_csv("Files\\covid_19.csv")
 
-search_term = "applied behavior analysis aba"
-# g = pubmed_graph(search_term)
+search_term = "aba adhd"
+g = pubmed_graph(search_term)
 
-g = load("applied behavior analysis", "pubmed")
+# g = load("applied behavior analysis", "pubmed")
 g.compare_order()
 
 # g = twitter_graph(df, "Covid")
