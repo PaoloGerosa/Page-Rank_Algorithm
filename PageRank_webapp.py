@@ -16,7 +16,9 @@ combination of the two.
 """)
 st.markdown(
 """
-\n Choose a query and an algorithm; then check the results, you don't know which algorithm you are using.
+\n Choose a query and an algorithm; then check the results, you don't know which algorithm you are using. \n
+After having used the webapp please fill in the form to let us know how you felt about the three different algorithm:
+https://docs.google.com/forms/d/e/1FAIpQLSc8CRUmCtofjP7M9SDj-MZB_qOMiPZJd281utUddRGd547Vgg/viewform?vc=0&c=0&w=1&flr=0
 """)
 
 Formula = ['<select>']
