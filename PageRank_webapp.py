@@ -14,12 +14,11 @@ Moreover it compares the ranks of the results according to three different algor
 its website, one is PageRank algorithm that is the one created by Google to rank websites and the last one is the 
 combination of the two.
 """)
+url = "https://docs.google.com/forms/d/19ugo_bLtkJebUGQ1IbPm-DKsg1aaVjsxbswX_P6tC6I"
 st.markdown(
 """
 \n Choose a query and an algorithm; then check the results, you don't know which algorithm you are using. \n
-After having used the webapp please fill in the form to let us know how you felt about the three different algorithm:
-https://docs.google.com/forms/d/e/1FAIpQLSc8CRUmCtofjP7M9SDj-MZB_qOMiPZJd281utUddRGd547Vgg/viewform?vc=0&c=0&w=1&flr=0
-""")
+After having used the webapp please fill in the form to let us know how the three different algorithms behave in your opinion: [PageRank form](%s)""" % url)
 
 Formula = ['<select>']
 for elem in os.listdir("PubMed"):
