@@ -1,6 +1,7 @@
 import numpy as np
 from copy import deepcopy
 import random
+import networkx as nx
 
 class Graph:
     def __init__(self, df, mode = None, standings = None, threshold = 0):
@@ -150,6 +151,29 @@ class Graph:
         if show:
             self.print_invariant(10)
         return self.invariant
+
+    def montecarlo_networkx(self, show = 1, query = None):
+        beta = 0.3
+        if self.real_standings:
+            query_words = set(query.split())
+            personalized = dict(zip(self.users, [0]*len(self.users)))
+            for i, elem in enumerate(self.real_standings):
+                for word in query_words:
+                    if word in elem:
+                        personalized[elem] += beta
+                personalized[elem] += float(1/(i+1))
+        else:
+            personalized = [1/self.count for _ in range(self.count)]
+        network = nx.Graph()
+        network.add_nodes_from(list(self.users))
+        edges = []
+        for key, val in self.graph.items():
+            for elem in val:
+                edges.append([key, elem])
+        network.add_edges_from(edges)
+        invariant = nx.pagerank(network, personalization=personalized)
+        invariant = sorted(invariant.items(), key=lambda item: item[1], reverse=True)
+        print(invariant[:10])
 
     def compare_order(self):
         new_order = []
