@@ -1,10 +1,11 @@
 import pandas as pd
 import streamlit as st
 import pickle
+import os
 import requests
 from bs4 import BeautifulSoup
 import time
-from Class import Graph
+from Class import Graph, Publication
 chomp = "PubMed//"
 
 # important function so that the app is dynamic
@@ -27,8 +28,15 @@ def constructLink(search, page, mode = 1):
 
 # It gets the HTML of a web page given URL
 def get_soup(URL):
-    source = requests.get(URL).text
-    soup = BeautifulSoup(source, 'lxml')
+    while True:
+        try:
+            source = requests.get(URL).text
+            soup = BeautifulSoup(source, 'lxml')
+            break
+        except:
+            print("5 seconds break")
+            time.sleep(5)
+            print("Let's start again")
     return soup
 
 # It gets the integer representing the total number of pages in results for a specific query in pubmed
@@ -69,12 +77,8 @@ def search(search, progress_bar):
     soup = get_soup(link)
     pages = min(get_total_page(soup), 10)
     articles = []                   # Couples of articles citation from source to target
-    set_of_articles = set()         # Auxiliary structure to count when a publication is dangling
+    dict_of_articles = dict()       # Auxiliary structure to count when a publication is dangling
     standings = []                                                                  # Real standing of the publications
-    memo_links = dict()                                                             # Links of the publications
-    memo_authors = dict()                                                           # Authors of the publications
-    memo_description = dict()                                                       # Descriptions of the publications
-    memo_doi = dict()                                                               # DOI of the publications
     for page in range(1, pages+1):
         link = constructLink(search, page = page)
         soup = get_soup(link)
@@ -96,23 +100,20 @@ def search(search, progress_bar):
                 doi = None
             further_link = article["href"].split("/")[1]                            # id of the article
             article_name = article.text.strip()                                     # remove useless space from the name
-            memo_links[article_name] = further_link                                 # It saves the link of the article
-            memo_authors[article_name] = author                                     # It saves the author of the article
-            memo_description[article_name] = description                            # It saves the description of the article
-            memo_doi[article_name] = doi                                            # It saves the DOI of the article
-            if article_name not in set_of_articles:
-                set_of_articles.add(article_name)
+
+            if article_name not in dict_of_articles:
+                dict_of_articles[article_name] = Publication(article_name, further_link, description, author, doi)
                 standings.append(article_name)
                 get_citations(further_link, articles, article_name)
         progress_bar.progress(page / pages)
-    return pd.DataFrame(articles, columns =['Source', 'Target']), standings, memo_links, memo_authors, memo_description, memo_doi
+    return pd.DataFrame(articles, columns =['Source', 'Target']), standings, dict_of_articles
 
 
 # It generates a Graph object in the pubmed web site using a query
 def pubmed_graph(search_term, progress_bar, threshold = 0):
-    articles, standings, memo_links, memo_authors, memo_descriptions, memo_doi = search(search_term, progress_bar)
+    articles, standings, dict_of_publications = search(search_term, progress_bar)
     g = Graph(articles, threshold = threshold, standings = standings)
-    g.add_info(memo_links, memo_authors, memo_descriptions, memo_doi)
+    g.add_info(dict_of_publications)
     g.print_details()
     g.montecarlo(query = search_term)
     g.compare_order()
@@ -147,5 +148,10 @@ def load(filename):
     except Exception as ex:
         print("Error during loading data:", ex)
 
-
+def delete_file(filename):
+    path = chomp + filename + ".pickle"
+    try:
+        os.remove(path)
+    except:
+        pass
 

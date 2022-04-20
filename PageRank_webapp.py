@@ -1,10 +1,9 @@
 # Import libraries
-import os
 from Streamlit_Auxiliary_Functions import *
 import time
 
 #st.set_page_config(layout="wide")
-
+delete_file("aba adhd")
 # title and explanation in the website
 st.title("PubMed with PageRank algorithm and with Best Match sort algorithm")
 st.markdown(
@@ -64,18 +63,15 @@ if (query != '<select>' or text_search in Formula) and algorithms:
     else:
         rank = g.real_standings
     rank = rank[:min(30, len(rank))]
-    links = g.links
-    descriptions = g.descriptions
-    authors = g.authors
     st.write(str(len(rank)) + " results found")
     st.write("")
 
     result_str = '<html><table style="border: none;">'  # Initializing the HTML code for displaying search results
     result_df = pd.DataFrame()
     for i, article in enumerate(rank):
-        href = get_link(links[article])
-        description = descriptions[article]
-        author = authors[article]
+        href = get_link(g.publications[article].id)
+        description = g.publications[article].description
+        author = g.publications[article].authors
         result_df = result_df.append(pd.DataFrame({"Title": article, "URL": href, "Authors": author, "Description": description}, index=[i]))
         result_str += f'<tr style="border: none;"><h3><a href="{href}" target="_blank">{article}</a></h3></tr>' + \
                       f'<tr style="border: none;"><strong style="color:green;">{author}</strong></tr>' + \
