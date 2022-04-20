@@ -3,10 +3,6 @@ from Streamlit_Auxiliary_Functions import *
 import time
 
 #st.set_page_config(layout="wide")
-delete_file("autism denver model")
-delete_file("pagerank")
-delete_file("covid 19")
-delete_file("best match sort")
 
 # title and explanation in the website
 st.title("PubMed with PageRank algorithm and with Best Match sort algorithm")
