@@ -4,8 +4,6 @@ import time
 
 #st.set_page_config(layout="wide")
 
-delete_file("pagerank")
-
 # title and explanation in the website
 st.title("PubMed with PageRank algorithm and with Best Match sort algorithm")
 st.markdown(
