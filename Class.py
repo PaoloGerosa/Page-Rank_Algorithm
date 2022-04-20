@@ -13,15 +13,19 @@ class Graph:
         self.real_standings = standings             # Standings of objects in the real context (Twitter, Pubmed)
         self.myorder = []                           # My standings according to the algorithm
         self.combo_order = []                       # In PubMed Standings according to the algorithm combination of PageRank and Best Match sort
+
+        ## The following 4 datasets are helpful to retrieve information in the webapp interface
         self.links = dict()                         # When the network comes from PubMed it creates the links of the articles,
         self.authors = dict()                       # it creates the authors and descriptions for each article
-        self.descriptions = dict()
+        self.descriptions = dict()                  # it creates the descriptions dictionary
+        self.doi = dict()                           # it creates the DOI dictionary
+
+        ## Graph data structures
         self.graph = dict()
         self.create_graph(df, mode, threshold)
         self.matrix = [[0 for _ in range(self.count)] for _ in range(self.count)]
         self.markovmatrix = []                      # Numpy matrix that represents the Google matrix
         self.create_adjacency_matrix()
-        self.link = dict()
 
     # Given a source node and a target node it inserts their link in the graph
     def insert_node(self, source, target):
@@ -174,10 +178,11 @@ class Graph:
             print(self.myorder[i])
 
     # Only when the network is related to a PubMed query it creates a dictionary of all the links related to the URLs
-    def add_info(self, memo_links, memo_authors, memo_descriptions):
+    def add_info(self, memo_links, memo_authors, memo_descriptions, memo_doi):
         self.links = memo_links
         self.authors = memo_authors
         self.descriptions = memo_descriptions
+        self.doi = memo_doi
 
 
 
