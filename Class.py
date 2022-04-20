@@ -164,6 +164,7 @@ class Graph:
                 personalized[elem] += float(1/(i+1))
         else:
             personalized = [1/self.count for _ in range(self.count)]
+
         network = nx.Graph()
         network.add_nodes_from(list(self.users))
         edges = []
@@ -171,7 +172,10 @@ class Graph:
             for elem in val:
                 edges.append([key, elem])
         network.add_edges_from(edges)
-        invariant = nx.pagerank(network, personalization=personalized)
+        if self.real_standings:
+            invariant = nx.pagerank(network, personalization=personalized)
+        else:
+            invariant = nx.pagerank(network)
         invariant = sorted(invariant.items(), key=lambda item: item[1], reverse=True)
         print(invariant[:10])
 
