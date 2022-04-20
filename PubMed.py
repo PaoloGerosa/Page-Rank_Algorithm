@@ -81,7 +81,7 @@ def search(search):
             memo_links[article_name] = further_link                                 # It saves the link of the article
             memo_authors[article_name] = author                                     # It saves the author of the article
             memo_description[article_name] = description                            # It saves the description of the article
-            memo_doi[article_name] = doi
+            memo_doi[article_name] = doi                                            # It saves the DOI of the article
             if article_name not in set_of_articles:
                 set_of_articles.add(article_name)
                 standings.append(article_name)
