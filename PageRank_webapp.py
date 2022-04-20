@@ -3,7 +3,7 @@ from Streamlit_Auxiliary_Functions import *
 import time
 
 #st.set_page_config(layout="wide")
-
+delete_file("pagerank")
 # title and explanation in the website
 st.title("PubMed with PageRank algorithm and with Best Match sort algorithm")
 st.markdown(
@@ -54,7 +54,7 @@ if st.button("Submit"):
     query = result
 
 if (query != '<select>' or (text_search in Formula or text_search.lower() in Formula)) and algorithms:
-    search_term = query if query != '<select>' else text_search
+    search_term = query if query != '<select>' else text_search.lower()
     g = load(search_term)
     if algorithms == "Algorithm 1":
         rank = g.combo_order
