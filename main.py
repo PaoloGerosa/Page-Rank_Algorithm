@@ -11,9 +11,6 @@ g = pubmed_graph(search_term)
 # g = load("Covid", "twitter")
 
 # g.compare_order()
-g.montecarlo()
-g.montecarlo_networkx()
-print(g.myorder)
 
 # g = twitter_graph(df, "Covid")
 # print(find_standings(g.users, "2022-03-31", "2022-03-20", "covid_19"))

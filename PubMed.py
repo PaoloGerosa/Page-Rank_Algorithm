@@ -2,7 +2,7 @@
 import requests
 from bs4 import BeautifulSoup
 import time
-from Class import Graph
+from Class import Graph, Publication
 from Auxiliary_Functions import save
 import pandas as pd
 
@@ -45,17 +45,14 @@ def get_total_page(soup):
     return pages
 
 # It constructs a dataframe of a network of articles-citations in pubmed given in input a search query
+# It constructs a dataframe of a network of articles-citations in pubmed given in input a search query
 def search(search):
     link = constructLink(search, page = 1)
     soup = get_soup(link)
-    pages = min(get_total_page(soup), 30)
-    articles = []               # Couples of articles citation from source to target
-    set_of_articles = set()     # Auxiliary structure to count when a publication is dangling
+    pages = min(get_total_page(soup), 10)
+    articles = []                   # Couples of articles citation from source to target
+    dict_of_articles = dict()       # Auxiliary structure to count when a publication is dangling
     standings = []                                                                  # Real standing of the publications
-    memo_links = dict()                                                             # Links of the publications
-    memo_authors = dict()                                                           # Authors of the publications
-    memo_description = dict()                                                       # Descriptions of the publications
-    memo_doi = dict()                                                               # DOI of the publications
     for page in range(1, pages+1):
         print(page)
         link = constructLink(search, page = page)
@@ -78,15 +75,12 @@ def search(search):
                 doi = None
             further_link = article["href"].split("/")[1]                            # id of the article
             article_name = article.text.strip()                                     # remove useless space from the name
-            memo_links[article_name] = further_link                                 # It saves the link of the article
-            memo_authors[article_name] = author                                     # It saves the author of the article
-            memo_description[article_name] = description                            # It saves the description of the article
-            memo_doi[article_name] = doi
-            if article_name not in set_of_articles:
-                set_of_articles.add(article_name)
+
+            if article_name not in dict_of_articles:
+                dict_of_articles[article_name] = Publication(article_name, further_link, description, author, doi)
                 standings.append(article_name)
                 get_citations(further_link, articles, article_name)
-    return pd.DataFrame(articles, columns =['Source', 'Target']), standings, memo_links, memo_authors, memo_description, memo_doi
+    return pd.DataFrame(articles, columns =['Source', 'Target']), standings, dict_of_articles
 
 # Given the id of an article it finds all the citations of that article
 # The id is found in the HTML of the article
@@ -112,13 +106,14 @@ def get_citations(id, articles, name):
 
 # It generates a Graph object in the pubmed web site using a query
 def pubmed_graph(search_term, threshold = 0):
-    articles, standings, memo_links, memo_authors, memo_descriptions, memo_doi = search(search_term)
+    articles, standings, dict_of_publications = search(search_term)
     g = Graph(articles, threshold = threshold, standings = standings)
-    g.add_info(memo_links, memo_authors, memo_descriptions, memo_doi)
+    g.add_info(dict_of_publications)
     g.print_details()
     g.montecarlo(query = search_term)
     g.compare_order()
     save(search_term, g, "pubmed")
     return g
+
 
 

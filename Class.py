@@ -2,6 +2,7 @@ import numpy as np
 from copy import deepcopy
 import random
 import networkx as nx
+import requests
 
 class Graph:
     def __init__(self, df, mode = None, standings = None, threshold = 0):
@@ -11,15 +12,12 @@ class Graph:
         self.reverse_users = []                     # Ordered users
         self.column_sums = []                       # Sums of the boolean elements in the columns to build markovmatrix
         self.invariant = []                         # Invariant probability distribution
-        self.real_standings = standings             # Standings of objects in the real environment (Twitter, Pubmed)
+        self.real_standings = standings             # Standings of objects in the real context (Twitter, Pubmed)
         self.myorder = []                           # My standings according to the algorithm
         self.combo_order = []                       # In PubMed Standings according to the algorithm combination of PageRank and Best Match sort
 
-        ## The following 4 datasets are helpful to retrieve information in the webapp interface
-        self.links = dict()                         # When the network comes from PubMed it creates the links of the articles,
-        self.authors = dict()                       # it creates the authors dictionary
-        self.descriptions = dict()                  # it creates the descriptions dictionary
-        self.doi = dict()                           # it creates the DOI dictionary
+        ## Structure to save information for each publication in PubMed
+        self.publications = dict()
 
         ## Graph data structures
         self.graph = dict()
@@ -192,9 +190,8 @@ class Graph:
                     new_order.append(self.myorder[l])
         self.combo_order = new_order
 
-        for i in range(10):
+        for i in range(min(10, len(self.real_standings))):
             print((self.real_standings[i], self.myorder[i], new_order[i]))
-
 
     # It prints the first k elements of the invariant probability distribution
     def print_invariant(self, k = 10):
@@ -206,14 +203,27 @@ class Graph:
             print(self.myorder[i])
 
     # Only when the network is related to a PubMed query it creates a dictionary of all the links related to the URLs
-    def add_info(self, memo_links, memo_authors, memo_descriptions, memo_doi):
-        self.links = memo_links
-        self.authors = memo_authors
-        self.descriptions = memo_descriptions
-        self.doi = memo_doi
+    def add_info(self, publications):
+        self.publications = publications
+        api = "http://api.altmetric.com/v1/doi/"
+        for article in self.publications:
+            doi = self.publications[article].doi
+            if doi:
+                response = requests.get(api + doi)
+                if response.status_code == 200:
+                    result = response.json()
+                    self.publications[article].details = result
+                else:
+                    print(doi)
 
 
-
-
+class Publication:
+    def __init__(self, title, id, description, authors, doi):
+        self.title = title
+        self.id = id
+        self.description = description
+        self.authors = authors
+        self.doi = doi
+        self.details = None
 
 
