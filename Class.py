@@ -4,19 +4,16 @@ import random
 import requests
 
 class Graph:
-    def __init__(self, df, mode = None, standings = None, threshold = 0):
+    def __init__(self, df, mode = None, threshold = 0):
         self.count = 0                              # Number of nodes in the graph
         self.inner_graph = dict()                   # Directed graph with inverted edges
         self.users = dict()                         # Elements of the graph associated to their indeces in the matrix
         self.reverse_users = []                     # Ordered users
         self.column_sums = []                       # Sums of the boolean elements in the columns to build markovmatrix
         self.invariant = []                         # Invariant probability distribution
-        self.real_standings = standings             # Standings of objects in the real context (Twitter, Pubmed)
+        self.personalized_vector = []
+        self.personalized_dict = dict()
         self.myorder = []                           # My standings according to the algorithm
-        self.combo_order = []                       # In PubMed Standings according to the algorithm combination of PageRank and Best Match sort
-
-        ## Structure to save information for each publication in PubMed
-        self.publications = dict()
 
         ## Graph data structures
         self.graph = dict()
@@ -24,6 +21,15 @@ class Graph:
         self.matrix = [[0 for _ in range(self.count)] for _ in range(self.count)]
         self.markovmatrix = []                      # Numpy matrix that represents the Google matrix
         self.create_adjacency_matrix()
+
+    # It creates the graph from a dataframe
+    def create_graph(self, df, mode, threshold):
+        new_df = df
+        if mode:
+            new_df = df.loc[df['Kind'] == mode]
+        new_df = self.clean_df(threshold, new_df)
+        for source, target in zip(new_df["Source"], new_df["Target"]):
+            self.insert_node(source, target)
 
     # Given a source node and a target node it inserts their link in the graph
     def insert_node(self, source, target):
@@ -49,15 +55,6 @@ class Graph:
                 self.users[target] = self.count
                 self.reverse_users.append(target)
                 self.count += 1
-
-    # It creates the graph from a dataframe
-    def create_graph(self, df, mode, threshold):
-        new_df = df
-        if mode:
-            new_df = df.loc[df['Kind'] == mode]
-        new_df = self.clean_df(threshold, new_df)
-        for source, target in zip(new_df["Source"], new_df["Target"]):
-            self.insert_node(source, target)
 
     # It removes from the dataframe all the nodes with number of backward link <= threshold
     def clean_df(self, threshold, df):
@@ -94,91 +91,62 @@ class Graph:
     # Print some information of the graph
     def print_details(self):
         print("Total number of nodes: ", len(self.graph))
-
         dangling = 0
         for elem in self.column_sums:
             if not elem:
                 dangling += 1
-
         print("Total number of dangling nodes: ", dangling)
 
     # It simulates a Montecarlo Random walk to approximate the invariant probability distribution of the matrix
-    def montecarlo(self, show = 1, query = None):
+    def montecarlo(self, show=1):
         steps = 200000
         pi = np.array([0 for _ in range(self.count)])
-        start_state = random.randint(0, self.count-1)
+        start_state = random.randint(0, self.count - 1)
         pi[start_state] = 1
         prev_state = start_state
         alpha = 0.15
-        beta = 0.3
         choice = [i for i in range(self.count)]
-        if self.real_standings:
-            query_words = set(query.split())
-            personalized_vector = [0 for _ in range(self.count)]
-            total = 0
-            for i, elem in enumerate(self.real_standings):
-                for word in query_words:
-                    if word in elem:
-                        personalized_vector[self.users[elem]] += beta
-                personalized_vector[self.users[elem]] += float(1/(i+1))
-                total += personalized_vector[self.users[elem]]
-            personalized_vector = [val / total for val in personalized_vector]
-        else:
-            personalized_vector = [1/self.count for _ in range(self.count)]
         for i in range(steps):
-            if (i%10000 == 0):
+            if (i % 10000 == 0):
                 print(i)
             threshold = random.random()
             if threshold < alpha:
-                curr_state = np.random.choice(choice, p=personalized_vector)
+                curr_state = np.random.choice(choice, p=self.personalized_vector)
             else:
-                curr_state = np.random.choice(choice, p=self.markovmatrix[:,prev_state])
+                curr_state = np.random.choice(choice, p=self.markovmatrix[:, prev_state])
             pi[curr_state] += 1
             prev_state = curr_state
 
-        self.invariant = pi/steps
-        order = sorted(enumerate(self.invariant), key=lambda x: x[1], reverse=True)
-        myorder = [self.reverse_users[order[i][0]] for i in range(self.count)]
-
-        if self.real_standings:                      # Since the graph can consider more nodes than reality
-            real_objects = set(self.real_standings)  # If there exists a real standing consider only same objects
-            self.myorder = []
-            for elem in myorder:
-                if elem in real_objects:
-                    self.myorder.append(elem)
-        else:
-            self.myorder = myorder
+        self.invariant = pi / steps
 
         if show:
             self.print_invariant(10)
         return self.invariant
 
-    def compare_order(self):
-        new_order = []
-        for j in range(len(self.myorder)*2-1):
-            for k in range(j+1):
-                l = j-k
-                if l < len(self.myorder) and k < len(self.myorder) and self.myorder[l] == self.real_standings[k]:
-                    new_order.append(self.myorder[l])
-        self.combo_order = new_order
-
-        for i in range(min(10, len(self.real_standings))):
-            print((self.real_standings[i], self.myorder[i], new_order[i]))
-
-
     # It prints the first k elements of the invariant probability distribution
-    def print_invariant(self, k = 10):
-        if not self.myorder or k > len(self.myorder):
-            print("Error")
-            return
-
-        for i in range(k):
+    def print_invariant(self, k=10):
+        for i in range(min(k, len(self.myorder))):
             print(self.myorder[i])
 
-    # Only when the network is related to a PubMed query it creates a dictionary of all the links related to the URLs
-    def add_info(self, publications):
-        self.publications = publications
-        api = "http://api.altmetric.com/v1/doi/"
+
+
+api = "http://api.altmetric.com/v1/doi/"
+
+# Subclass PubMed of the class Graph
+class PubMed(Graph):
+    def __init__(self, df, dict_of_publications, query, standings, mode = None, threshold = 0):
+        super().__init__(df, mode, threshold)
+        self.query = query
+        self.publications = dict_of_publications
+        self.real_standings = standings                     # Standings of objects in the real context (Twitter, Pubmed)
+        self.combo_order = []                               # In PubMed Standings according to the algorithm combination of PageRank and Best Match sort
+
+        self.compute_personalized()
+        self.montecarlo()
+        self.compute_standings()
+        self.other_orders()
+
+    def add_info(self):
         for article in self.publications:
             doi = self.publications[article].doi
             if doi:
@@ -188,6 +156,45 @@ class Graph:
                     self.publications[article].details = result
                 else:
                     print(doi)
+
+    # It computes the probability distribution to be used in the Montecarlo simulation
+    def compute_personalized(self):
+        beta = 0.3
+        query_words = set(self.query.split())
+        personalized_vector = [0 for _ in range(self.count)]
+        total = 0
+        self.personalized_dict = dict(zip(self.users, [0] * len(self.users)))
+        for i, elem in enumerate(self.real_standings):
+            for word in query_words:
+                if word in elem:
+                    personalized_vector[self.users[elem]] += beta
+                    self.personalized_dict[elem] += beta
+            personalized_vector[self.users[elem]] += float(1 / (i + 1))
+            self.personalized_dict[elem] += float(1 / (i + 1))
+            total += personalized_vector[self.users[elem]]
+        self.personalized_vector = [val / total for val in personalized_vector]
+
+    def compute_standings(self):
+        order = sorted(enumerate(self.invariant), key=lambda x: x[1], reverse=True)
+        myorder = [self.reverse_users[order[i][0]] for i in range(self.count)]
+
+        real_objects = set(self.real_standings)
+        for elem in myorder:
+            if elem in real_objects:
+                self.myorder.append(elem)
+
+    def other_orders(self):
+        new_order = []
+        for j in range(len(self.myorder) * 2 - 1):
+            for k in range(j + 1):
+                l = j - k
+                if l < len(self.myorder) and k < len(self.myorder) and self.myorder[l] == self.real_standings[k]:
+                    new_order.append(self.myorder[l])
+        self.combo_order = new_order
+
+    def compare_orders(self):
+        for i in range(min(10, len(self.real_standings))):
+            print((self.real_standings[i], self.myorder[i], self.combo_order[i]))
 
 
 
@@ -199,7 +206,6 @@ class Publication:
         self.authors = authors
         self.doi = doi
         self.details = None
-
 
 
 

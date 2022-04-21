@@ -5,7 +5,7 @@ import os
 import requests
 from bs4 import BeautifulSoup
 import time
-from Class import Graph, Publication
+from Class import PubMed, Publication
 chomp = "PubMed//"
 
 # important function so that the app is dynamic
@@ -112,11 +112,8 @@ def search(search, progress_bar):
 # It generates a Graph object in the pubmed web site using a query
 def pubmed_graph(search_term, progress_bar, threshold = 0):
     articles, standings, dict_of_publications = search(search_term, progress_bar)
-    g = Graph(articles, threshold = threshold, standings = standings)
-    g.add_info(dict_of_publications)
+    g = PubMed(articles, dict_of_publications, search_term, threshold = threshold, standings = standings)
     g.print_details()
-    g.montecarlo(query = search_term)
-    g.compare_order()
     save(search_term, g)
     return g
 
