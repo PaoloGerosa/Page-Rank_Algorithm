@@ -2,7 +2,7 @@
 import requests
 from bs4 import BeautifulSoup
 import time
-from Class import Graph, Publication
+from Class import Publication, PubMed
 from Auxiliary_Functions import save
 import pandas as pd
 
@@ -107,11 +107,9 @@ def get_citations(id, articles, name):
 # It generates a Graph object in the pubmed web site using a query
 def pubmed_graph(search_term, threshold = 0):
     articles, standings, dict_of_publications = search(search_term)
-    g = Graph(articles, threshold = threshold, standings = standings)
-    g.add_info(dict_of_publications)
+    g = PubMed(articles, dict_of_publications, search_term, threshold = threshold, standings = standings)
     g.print_details()
-    g.montecarlo(query = search_term)
-    g.compare_order()
+    g.compare_orders()
     save(search_term, g, "pubmed")
     return g
 

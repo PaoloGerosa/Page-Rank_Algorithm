@@ -1,5 +1,5 @@
 # Import Libraries to create a Graph object and to save it in local
-from Class import Graph
+from Class import Twitter
 from Auxiliary_Functions import save
 import tweepy
 from Credentials import *
@@ -11,11 +11,10 @@ api = tweepy.API(auth, wait_on_rate_limit=True)
 
 # It generates a Graph object using a twitter dataframe derived from Gephi
 def twitter_graph(df, save_term, threshold = 0):
-    g = Graph(df = df, mode = "Quote", threshold = threshold)
+    g = Twitter(df = df, mode = "Quote", threshold = threshold)
     save(save_term, g, "twitter")
 
     g.print_details()
-    g.montecarlo()
     return g
 
 # Return the standing of users available in the first 2000 tweets according to Twitter
