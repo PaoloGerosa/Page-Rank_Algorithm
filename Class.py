@@ -99,25 +99,26 @@ class Graph:
 
     # It simulates a Montecarlo Random walk to approximate the invariant probability distribution of the matrix
     def montecarlo(self, show=1):
-        steps = 200000
-        pi = np.array([0 for _ in range(self.count)])
-        start_state = random.randint(0, self.count - 1)
-        pi[start_state] = 1
-        prev_state = start_state
-        alpha = 0.15
-        choice = [i for i in range(self.count)]
-        for i in range(steps):
-            if (i % 10000 == 0):
-                print(i)
-            threshold = random.random()
-            if threshold < alpha:
-                curr_state = np.random.choice(choice, p=self.personalized_vector)
-            else:
-                curr_state = np.random.choice(choice, p=self.markovmatrix[:, prev_state])
-            pi[curr_state] += 1
-            prev_state = curr_state
+        if self.count:
+            steps = 200000
+            pi = np.array([0 for _ in range(self.count)])
+            start_state = random.randint(0, self.count - 1)
+            pi[start_state] = 1
+            prev_state = start_state
+            alpha = 0.15
+            choice = [i for i in range(self.count)]
+            for i in range(steps):
+                if (i % 10000 == 0):
+                    print(i)
+                threshold = random.random()
+                if threshold < alpha:
+                    curr_state = np.random.choice(choice, p=self.personalized_vector)
+                else:
+                    curr_state = np.random.choice(choice, p=self.markovmatrix[:, prev_state])
+                pi[curr_state] += 1
+                prev_state = curr_state
 
-        self.invariant = pi / steps
+            self.invariant = pi / steps
 
         if show:
             self.print_invariant(10)

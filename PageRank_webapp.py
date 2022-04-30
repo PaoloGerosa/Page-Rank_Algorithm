@@ -63,23 +63,25 @@ if (query != '<select>' or (text_search in Formula or text_search.lower() in For
     else:
         rank = g.real_standings
     rank = rank[:min(30, len(rank))]
-    st.write(str(len(rank)) + " results found")
-    st.write("")
+    if len(rank):
+        st.write(str(len(rank)) + " results found")
+        st.write("")
 
-    result_str = '<html><table style="border: none;">'  # Initializing the HTML code for displaying search results
-    result_df = pd.DataFrame()
-    for i, article in enumerate(rank):
-        href = get_link(g.publications[article].id)
-        description = g.publications[article].description
-        author = g.publications[article].authors
-        result_df = result_df.append(pd.DataFrame({"Title": article, "URL": href, "Authors": author, "Description": description}, index=[i]))
-        result_str += f'<tr style="border: none;"><h3><a href="{href}" target="_blank">{article}</a></h3></tr>' + \
-                      f'<tr style="border: none;"><strong style="color:green;">{author}</strong></tr>' + \
-                      f'<tr style="border: none;">{description}</tr>' + \
-                      f'<tr style="border: none;"><td style="border: none;"></td></tr>'
-    result_str += '</table></html>'
+        result_str = '<html><table style="border: none;">'  # Initializing the HTML code for displaying search results
+        result_df = pd.DataFrame()
+        for i, article in enumerate(rank):
+            href = get_link(g.publications[article].id)
+            description = g.publications[article].description
+            author = g.publications[article].authors
+            result_df = result_df.append(pd.DataFrame({"Title": article, "URL": href, "Authors": author, "Description": description}, index=[i]))
+            result_str += f'<tr style="border: none;"><h3><a href="{href}" target="_blank">{article}</a></h3></tr>' + \
+                          f'<tr style="border: none;"><strong style="color:green;">{author}</strong></tr>' + \
+                          f'<tr style="border: none;">{description}</tr>' + \
+                          f'<tr style="border: none;"><td style="border: none;"></td></tr>'
+        result_str += '</table></html>'
 
-    st.markdown(f'{result_str}', unsafe_allow_html=True)
-    #st.markdown('<h3>Data Frame of the above search result</h3>', unsafe_allow_html=True)
-    #st.dataframe(result_df)
-
+        st.markdown(f'{result_str}', unsafe_allow_html=True)
+        #st.markdown('<h3>Data Frame of the above search result</h3>', unsafe_allow_html=True)
+        #st.dataframe(result_df)
+    else:
+        st.warning('No results found. Please try with a new research')
