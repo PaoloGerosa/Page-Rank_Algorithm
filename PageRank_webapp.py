@@ -4,10 +4,6 @@ import time
 
 #st.set_page_config(layout="wide")
 
-delete_file("autism altereted sensitivity")
-delete_file("")
-delete_file(" ")
-
 # title and explanation in the website
 st.title("PubMed with PageRank algorithm and with Best Match sort algorithm")
 st.markdown(
