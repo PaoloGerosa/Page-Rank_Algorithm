@@ -1,4 +1,12 @@
 import pickle
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+import plotly.express as px
+from functools import cmp_to_key
+from scipy.stats import geom
 
 chomp = "Objects"
 
@@ -26,3 +34,121 @@ def load(filename, mode):
 
     except Exception as ex:
         print("Error during loading data:", ex)
+
+# PCA analysis in order to personalize teleportation distribution
+# mode = 1 if we want to plot the results
+def pca_analysis(g, mode = 0):
+    # features to use to create the standing
+    columns = ['cited_by_feeds_count', 'cited_by_posts_count', 'cited_by_tweeters_count', 'cited_by_policies_count', 'cited_by_patents_count', 'cited_by_wikipedia_count', 'cited_by_accounts_count', 'score', 'readers_count', 'mendeley', 'connotea']
+    # features that are under readers in the details of the publication
+    sub_columns = ['mendeley', 'connotea']
+    # articles that have non empty details
+    articles_list = []
+    m = len(columns)
+    article_dict = {col: [] for col in columns}
+    for article in g.publications:
+        details = g.publications[article].details
+        if details:
+            articles_list.append(article)
+            for i, col in enumerate(columns):
+                if col in sub_columns:
+                    info = details["readers"].get(col, 0)
+                else:
+                    info = details.get(col, 0)
+                article_dict[col].append(info)
+    details_df = pd.DataFrame(data = article_dict)
+
+    features = columns
+    x = details_df.loc[:, features].values
+    # Standardizing the features
+    x = StandardScaler().fit_transform(x)
+
+    """fig = px.imshow(np.corrcoef(np.transpose(x)),
+                    labels=dict(color="Productivity"),
+                    x=columns,
+                    y=columns)
+    fig.show()"""
+    if mode:
+        pca = PCA()
+        principalComponents = pca.fit_transform(x)
+        # plt.bar([i for i in range(1, m + 1)], np.cumsum(pca.explained_variance_ratio_))
+        # plt.plot(np.linspace(0.5, m+0.5, m), [0.7 for _ in range(m)], color = "k")
+        # plt.show()
+
+        exp_var_cumul = np.cumsum(pca.explained_variance_ratio_)
+        fig = px.area(
+            x=range(1, exp_var_cumul.shape[0] + 1),
+            y=exp_var_cumul,
+            labels={"x": "# Components", "y": "Explained Variance"}
+        )
+        fig.show()
+
+
+        pca = PCA(n_components=3)
+        principalComponents = pca.fit_transform(x)
+        # print(principalComponents)
+        # print(pca.explained_variance_ratio_)
+        # principalDf = pd.DataFrame(data = principalComponents, columns = ['principal component 1', 'principal component 2'])
+
+        """labels = {
+            str(i): f"PC {i + 1}" # ({var:.1f}%)
+            for i, var in enumerate(pca.explained_variance_ratio_ * 100)}
+
+        fig = px.scatter_matrix(
+            principalComponents,
+            labels=labels,
+            dimensions=range(3)
+        )
+        fig.update_traces(diagonal_visible=False)
+        fig.show()"""
+
+        loadings = pd.DataFrame(pca.components_, columns=columns)
+        # print(loadings)
+        fig = px.bar(loadings.iloc[0].values.tolist(), labels={"index": "Components", "value": "Loadings"})
+        fig.show()
+
+        fig = px.bar(loadings.iloc[1].values.tolist(), labels={"index": "Components", "value": "Loadings"})
+        fig.show()
+
+    pca = PCA(n_components=2)
+    principalComponents = pca.fit_transform(x)
+    return principalComponents, articles_list
+
+# Comparison used to sort and create the standing
+def compare(item1, item2):
+    if item1[1] > item2[1] + 0.5:
+        return 1
+    elif item2[1] > item1[1] + 0.5:
+        return -1
+    else:
+        if item1[2] > item2[2]:
+            return 1
+        elif item2[2] > item1[2]:
+            return -1
+    return 0
+
+# It creates the standing and return the final personalized distribution
+def personalized_altmetric(g):
+    pc, articles_list = pca_analysis(g)
+    pc = [[i, pc[i][0], pc[i][1]] for i in range(len(pc))]
+    pc.sort(key=cmp_to_key(compare), reverse=True)
+    standing = [pc[i][0] for i in range(len(pc))]
+    return create_distribution(g, standing, articles_list)
+
+# It creates the geometric distribution to use in the Montecarlo simulation
+def create_distribution(g, standing, articles_list):
+    X = [i+1 for i in range(len(standing))]
+    p = 0.2
+    geom_pd = geom.pmf(X, p)
+    prob_left = 1 - sum(geom_pd)
+    geom_standing = {articles_list[standing[i]]: geom_pd[i] for i in range(len(articles_list))}
+
+    elements_left = g.count - len(geom_pd)
+    personalized_vector = [float(prob_left / elements_left) if elements_left else 0 for _ in range(g.count)]
+    for elem in geom_standing:
+        personalized_vector[g.users[elem]] = geom_standing[elem]
+
+    return personalized_vector
+
+
+

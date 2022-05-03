@@ -45,7 +45,6 @@ def get_total_page(soup):
     return pages
 
 # It constructs a dataframe of a network of articles-citations in pubmed given in input a search query
-# It constructs a dataframe of a network of articles-citations in pubmed given in input a search query
 def search(search):
     link = constructLink(search, page = 1)
     soup = get_soup(link)
@@ -109,7 +108,6 @@ def pubmed_graph(search_term, threshold = 0):
     articles, standings, dict_of_publications = search(search_term)
     g = PubMed(articles, dict_of_publications, search_term, threshold = threshold, standings = standings)
     g.print_details()
-    g.compare_orders()
     save(search_term, g, "pubmed")
     return g
 

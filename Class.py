@@ -3,6 +3,7 @@ from copy import deepcopy
 import random
 import networkx as nx
 import requests
+from Auxiliary_Functions import personalized_altmetric
 
 class Graph:
     def __init__(self, df, mode = None, threshold = 0):
@@ -98,32 +99,7 @@ class Graph:
                 dangling += 1
         print("Total number of dangling nodes: ", dangling)
 
-    # It simulates a Montecarlo Random walk to approximate the invariant probability distribution of the matrix
-    def montecarlo(self, show=1):
-        steps = 200000
-        pi = np.array([0 for _ in range(self.count)])
-        start_state = random.randint(0, self.count - 1)
-        pi[start_state] = 1
-        prev_state = start_state
-        alpha = 0.15
-        choice = [i for i in range(self.count)]
-        for i in range(steps):
-            if (i % 10000 == 0):
-                print(i)
-            threshold = random.random()
-            if threshold < alpha:
-                curr_state = np.random.choice(choice, p=self.personalized_vector)
-            else:
-                curr_state = np.random.choice(choice, p=self.markovmatrix[:, prev_state])
-            pi[curr_state] += 1
-            prev_state = curr_state
-
-        self.invariant = pi / steps
-
-        if show:
-            self.print_invariant(10)
-        return self.invariant
-
+    # It simulates a Montecarlo Random walk by using the networkx library
     def montecarlo_networkx(self):
         network = nx.Graph()
         network.add_nodes_from(list(self.users))
@@ -153,6 +129,8 @@ class PubMed(Graph):
         self.real_standings = standings                     # Standings of objects in the real context (Twitter, Pubmed)
         self.combo_order = []                               # In PubMed Standings according to the algorithm combination of PageRank and Best Match sort
 
+        self.add_info()
+        self.altmetric_personalized_vector = personalized_altmetric(self)
         self.compute_personalized()
         self.montecarlo()
         self.compute_standings()
@@ -195,6 +173,32 @@ class PubMed(Graph):
             if elem in real_objects:
                 self.myorder.append(elem)
 
+    # It simulates a Montecarlo Random walk to approximate the invariant probability distribution of the matrix
+    def montecarlo(self, show=1):
+        steps = 200000
+        pi = np.array([0 for _ in range(self.count)])
+        start_state = random.randint(0, self.count - 1)
+        pi[start_state] = 1
+        prev_state = start_state
+        alpha = 0.15
+        choice = [i for i in range(self.count)]
+        for i in range(steps):
+            if (i % 10000 == 0):
+                print(i)
+            threshold = random.random()
+            if threshold < alpha:
+                curr_state = np.random.choice(choice, p=self.altmetric_personalized_vector)
+            else:
+                curr_state = np.random.choice(choice, p=self.markovmatrix[:, prev_state])
+            pi[curr_state] += 1
+            prev_state = curr_state
+
+        self.invariant = pi / steps
+
+        if show:
+            self.print_invariant(10)
+        return self.invariant
+
     def other_orders(self):
         new_order = []
         for j in range(len(self.myorder) * 2 - 1):
@@ -214,6 +218,10 @@ class PubMed(Graph):
 class Twitter(Graph):
     def __init__(self, df, mode = None, threshold = 0):
         super().__init__(df, mode, threshold)
+
+        self.compute_personalized()
+        self.montecarlo_networkx()
+        self.compute_standings()
 
     # It computes the probability distribution to be used in the Montecarlo simulation
     def compute_personalized(self):
