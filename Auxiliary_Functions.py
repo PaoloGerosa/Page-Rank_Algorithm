@@ -158,3 +158,24 @@ def create_distribution(g, standing, articles_list):
 
 
 
+"""from scipy.stats import geom
+test = [i+1 for i in range(6)]
+X = [i+1 for i in range(6)]
+Y = ["p = 0.2" for i in range(6)]
+Y.extend(["p = 0.5" for i in range(6)])
+Y.extend(["p = 0.8" for i in range(6)])
+X.extend([i+1 for i in range(6)])
+X.extend([i+1 for i in range(6)])
+p1 = 0.2
+p2 = 0.5
+p3 = 0.8
+geom_pd = list(geom.pmf(test, p1))
+geom_pd.extend(list(geom.pmf(test, p2)))
+geom_pd.extend(list(geom.pmf(test, p3)))
+data = pd.DataFrame({'x' : X, 'Parameter p' : Y, 'P(X = x)' : geom_pd}, columns=['x','Parameter p','P(X = x)'])
+import plotly.express as px
+
+fig = px.line(data, y="P(X = x)", x="x", color="Parameter p", markers = True)
+fig.update_traces(marker_size=10)
+fig.update_layout(font=dict(size=30))
+fig.show()"""
