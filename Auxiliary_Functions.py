@@ -1,12 +1,13 @@
 import pickle
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import plotly.express as px
 from functools import cmp_to_key
 from scipy.stats import geom
+import plotly.graph_objs as go
 
 chomp = "Objects"
 
@@ -61,13 +62,14 @@ def pca_analysis(g, mode = 0):
     features = columns
     x = details_df.loc[:, features].values
     # Standardizing the features
-    x = StandardScaler().fit_transform(x)
+    x = MinMaxScaler().fit_transform(x)
 
-    """fig = px.imshow(np.corrcoef(np.transpose(x)),
+    fig = px.imshow(np.corrcoef(np.transpose(x)),
                     labels=dict(color="Productivity"),
                     x=columns,
                     y=columns)
-    fig.show()"""
+    fig.update_layout(font=dict(size=18))
+    fig.show()
     if mode:
         pca = PCA()
         principalComponents = pca.fit_transform(x)
@@ -81,6 +83,7 @@ def pca_analysis(g, mode = 0):
             y=exp_var_cumul,
             labels={"x": "# Components", "y": "Explained Variance"}
         )
+        fig.update_layout(font=dict(size=30))
         fig.show()
 
 
@@ -90,7 +93,7 @@ def pca_analysis(g, mode = 0):
         # print(pca.explained_variance_ratio_)
         # principalDf = pd.DataFrame(data = principalComponents, columns = ['principal component 1', 'principal component 2'])
 
-        """labels = {
+        labels = {
             str(i): f"PC {i + 1}" # ({var:.1f}%)
             for i, var in enumerate(pca.explained_variance_ratio_ * 100)}
 
@@ -99,15 +102,18 @@ def pca_analysis(g, mode = 0):
             labels=labels,
             dimensions=range(3)
         )
+        fig.update_layout(font=dict(size=30))
         fig.update_traces(diagonal_visible=False)
-        fig.show()"""
+        fig.show()
 
         loadings = pd.DataFrame(pca.components_, columns=columns)
         # print(loadings)
         fig = px.bar(loadings.iloc[0].values.tolist(), labels={"index": "Components", "value": "Loadings"})
+        fig.update_layout(font=dict(size=30))
         fig.show()
 
         fig = px.bar(loadings.iloc[1].values.tolist(), labels={"index": "Components", "value": "Loadings"})
+        fig.update_layout(font=dict(size=30))
         fig.show()
 
     pca = PCA(n_components=2)
