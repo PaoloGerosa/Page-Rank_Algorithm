@@ -151,4 +151,3 @@ def delete_file(filename):
         os.remove(path)
     except:
         pass
-

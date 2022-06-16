@@ -2,6 +2,11 @@ import numpy as np
 from copy import deepcopy
 import random
 import requests
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.decomposition import PCA
+from functools import cmp_to_key
+from scipy.stats import geom
+import pandas as pd
 
 class Graph:
     def __init__(self, df, mode = None, threshold = 0):
@@ -97,33 +102,6 @@ class Graph:
                 dangling += 1
         print("Total number of dangling nodes: ", dangling)
 
-    # It simulates a Montecarlo Random walk to approximate the invariant probability distribution of the matrix
-    def montecarlo(self, show=1):
-        if self.count:
-            steps = 200000
-            pi = np.array([0 for _ in range(self.count)])
-            start_state = random.randint(0, self.count - 1)
-            pi[start_state] = 1
-            prev_state = start_state
-            alpha = 0.15
-            choice = [i for i in range(self.count)]
-            for i in range(steps):
-                if (i % 10000 == 0):
-                    print(i)
-                threshold = random.random()
-                if threshold < alpha:
-                    curr_state = np.random.choice(choice, p=self.personalized_vector)
-                else:
-                    curr_state = np.random.choice(choice, p=self.markovmatrix[:, prev_state])
-                pi[curr_state] += 1
-                prev_state = curr_state
-
-            self.invariant = pi / steps
-
-        if show:
-            self.print_invariant(10)
-        return self.invariant
-
     # It prints the first k elements of the invariant probability distribution
     def print_invariant(self, k=10):
         for i in range(min(k, len(self.myorder))):
@@ -142,6 +120,8 @@ class PubMed(Graph):
         self.real_standings = standings                     # Standings of objects in the real context (Twitter, Pubmed)
         self.combo_order = []                               # In PubMed Standings according to the algorithm combination of PageRank and Best Match sort
 
+        self.add_info()
+        self.altmetric_personalized_vector = personalized_altmetric(self)
         self.compute_personalized()
         self.montecarlo()
         self.compute_standings()
@@ -184,6 +164,33 @@ class PubMed(Graph):
             if elem in real_objects:
                 self.myorder.append(elem)
 
+    # It simulates a Montecarlo Random walk to approximate the invariant probability distribution of the matrix
+    def montecarlo(self, show=1):
+        if self.count:
+            steps = 200000
+            pi = np.array([0 for _ in range(self.count)])
+            start_state = random.randint(0, self.count - 1)
+            pi[start_state] = 1
+            prev_state = start_state
+            alpha = 0.15
+            choice = [i for i in range(self.count)]
+            for i in range(steps):
+                if (i % 10000 == 0):
+                    print(i)
+                threshold = random.random()
+                if threshold < alpha:
+                    curr_state = np.random.choice(choice, p=self.altmetric_personalized_vector)
+                else:
+                    curr_state = np.random.choice(choice, p=self.markovmatrix[:, prev_state])
+                pi[curr_state] += 1
+                prev_state = curr_state
+
+            self.invariant = pi / steps
+
+        if show:
+            self.print_invariant(10)
+        return self.invariant
+
     def other_orders(self):
         new_order = []
         for j in range(len(self.myorder) * 2 - 1):
@@ -207,6 +214,78 @@ class Publication:
         self.authors = authors
         self.doi = doi
         self.details = None
+
+
+
+
+## This are the functions to support the classes initiated above
+
+# PCA analysis in order to personalize teleportation distribution
+def pca_analysis(g):
+    # features to use to create the standing
+    columns = ['cited_by_feeds_count', 'cited_by_posts_count', 'cited_by_tweeters_count', 'cited_by_policies_count', 'cited_by_patents_count', 'cited_by_wikipedia_count', 'cited_by_accounts_count', 'score', 'readers_count', 'mendeley', 'connotea']
+    # features that are under readers in the details of the publication
+    sub_columns = ['mendeley', 'connotea']
+    # articles that have non empty details
+    articles_list = []
+    article_dict = {col: [] for col in columns}
+    for article in g.publications:
+        details = g.publications[article].details
+        if details:
+            articles_list.append(article)
+            for i, col in enumerate(columns):
+                if col in sub_columns:
+                    info = details["readers"].get(col, 0)
+                else:
+                    info = details.get(col, 0)
+                article_dict[col].append(info)
+    details_df = pd.DataFrame(data = article_dict)
+
+    features = columns
+    x = details_df.loc[:, features].values
+    # Standardizing the features
+    x = MinMaxScaler().fit_transform(x)
+
+    pca = PCA(n_components=2)
+    principalComponents = pca.fit_transform(x)
+    return principalComponents, articles_list
+
+# Comparison used to sort and create the standing
+def compare(item1, item2):
+    if item1[1] > item2[1] + 0.5:
+        return 1
+    elif item2[1] > item1[1] + 0.5:
+        return -1
+    else:
+        if item1[2] > item2[2]:
+            return 1
+        elif item2[2] > item1[2]:
+            return -1
+    return 0
+
+# It creates the standing and return the final personalized distribution
+def personalized_altmetric(g):
+    pc, articles_list = pca_analysis(g)
+    pc = [[i, pc[i][0], pc[i][1]] for i in range(len(pc))]
+    pc.sort(key=cmp_to_key(compare), reverse=True)
+    standing = [pc[i][0] for i in range(len(pc))]
+    return create_distribution(g, standing, articles_list)
+
+# It creates the geometric distribution to use in the Montecarlo simulation
+def create_distribution(g, standing, articles_list):
+    X = [i+1 for i in range(len(standing))]
+    p = 0.2
+    geom_pd = geom.pmf(X, p)
+    prob_left = 1 - sum(geom_pd)
+    geom_standing = {articles_list[standing[i]]: geom_pd[i] for i in range(len(articles_list))}
+
+    elements_left = g.count - len(geom_pd)
+    personalized_vector = [float(prob_left / elements_left) if elements_left else 0 for _ in range(g.count)]
+    for elem in geom_standing:
+        personalized_vector[g.users[elem]] = geom_standing[elem]
+
+    return personalized_vector
+
 
 
 
