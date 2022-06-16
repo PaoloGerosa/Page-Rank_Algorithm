@@ -15,4 +15,4 @@ g = load(search_term, "pubmed")
 # print(find_standings(g.users, "2022-03-31", "2022-03-20", "covid_19"))
 
 
-pca_analysis(g, 1)
+pca_analysis(g)
