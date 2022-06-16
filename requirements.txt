@@ -6,3 +6,4 @@ pandas==1.0.4
 protobuf==3.20.0
 streamlit==1.8.1
 unicode==2.8
+scikit-learn==0.24.2
