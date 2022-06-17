@@ -139,10 +139,10 @@ def personalized_altmetric(g):
     pc = [[i, pc[i][0], pc[i][1]] for i in range(len(pc))]
     pc.sort(key=cmp_to_key(compare), reverse=True)
     standing = [pc[i][0] for i in range(len(pc))]
-    return create_distribution(g, standing, articles_list)
+    return create_pca_distribution(g, standing, articles_list)
 
 # It creates the geometric distribution to use in the Montecarlo simulation
-def create_distribution(g, standing, articles_list):
+def create_pca_distribution(g, standing, articles_list):
     X = [i+1 for i in range(len(standing))]
     p = 0.2
     geom_pd = geom.pmf(X, p)
@@ -156,9 +156,23 @@ def create_distribution(g, standing, articles_list):
 
     return personalized_vector
 
+def create_distribution(g, standing):
+    X = [i + 1 for i in range(len(standing))]
+    p = 0.2
+    geom_pd = geom.pmf(X, p)
+    total_prob = sum(geom_pd)
+    geom_standing = {standing[i]: geom_pd[i] for i in range(len(standing))}
+
+    personalized_vector = [0.0 for _ in range(g.count)]
+    for elem in geom_standing:
+        personalized_vector[g.users[elem]] = float(geom_standing[elem] / total_prob)
+
+    return personalized_vector
 
 
-"""from scipy.stats import geom
+
+"""
+from scipy.stats import geom
 test = [i+1 for i in range(6)]
 X = [i+1 for i in range(6)]
 Y = ["p = 0.2" for i in range(6)]
@@ -178,4 +192,5 @@ import plotly.express as px
 fig = px.line(data, y="P(X = x)", x="x", color="Parameter p", markers = True)
 fig.update_traces(marker_size=10)
 fig.update_layout(font=dict(size=30))
-fig.show()"""
+fig.show()
+"""
