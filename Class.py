@@ -122,10 +122,12 @@ class PubMed(Graph):
 
         self.add_info()
         self.altmetric_personalized_vector = personalized_altmetric(self)
+        self.pubmed_personalized_vector = create_distribution(self, standings)
         self.compute_personalized()
         self.montecarlo()
-        self.compute_standings()
-        self.other_orders()
+        self.myorder = self.compute_standings()
+        self.generalized_order = self.multiple_pagerank([self.altmetric_personalized_vector, self.pubmed_personalized_vector])
+        self.combo_orders()
 
     def add_info(self):
         for article in self.publications:
@@ -155,14 +157,17 @@ class PubMed(Graph):
             total += personalized_vector[self.users[elem]]
         self.personalized_vector = [val / total for val in personalized_vector]
 
-    def compute_standings(self):
-        order = sorted(enumerate(self.invariant), key=lambda x: x[1], reverse=True)
+    def compute_standings(self, invariant = None):
+        invariant = invariant if invariant is not None else self.invariant
+        order = sorted(enumerate(invariant), key=lambda x: x[1], reverse=True)
         myorder = [self.reverse_users[order[i][0]] for i in range(self.count)]
 
         real_objects = set(self.real_standings)
+        aux_myorder = []
         for elem in myorder:
             if elem in real_objects:
-                self.myorder.append(elem)
+                aux_myorder.append(elem)
+        return aux_myorder
 
     # It simulates a Montecarlo Random walk to approximate the invariant probability distribution of the matrix
     def montecarlo(self, show=1):
@@ -191,7 +196,7 @@ class PubMed(Graph):
             self.print_invariant(10)
         return self.invariant
 
-    def other_orders(self):
+    def combo_orders(self):
         new_order = []
         for j in range(len(self.myorder) * 2 - 1):
             for k in range(j + 1):
@@ -203,6 +208,30 @@ class PubMed(Graph):
     def compare_orders(self):
         for i in range(min(10, len(self.real_standings))):
             print((self.real_standings[i], self.myorder[i], self.combo_order[i]))
+
+    def multiple_pagerank(self, personalized_list_vector):
+        steps = 200000
+        m = len(personalized_list_vector)
+        pi = np.array([0 for _ in range(self.count)])
+        start_state = random.randint(0, self.count - 1)
+        pi[start_state] = 1
+        prev_state = start_state
+        alpha = 0.15
+        gamma = alpha / m
+        choice = [i for i in range(self.count)]
+        for i in range(steps):
+            threshold = random.random()
+            if threshold < alpha:
+                index = int(threshold // gamma)
+                curr_state = np.random.choice(choice, p=personalized_list_vector[index])
+            else:
+                curr_state = np.random.choice(choice, p=self.markovmatrix[:, prev_state])
+            pi[curr_state] += 1
+            prev_state = curr_state
+
+        invariant = pi / steps
+        order = self.compute_standings(invariant)
+        return order
 
 
 
@@ -269,10 +298,10 @@ def personalized_altmetric(g):
     pc = [[i, pc[i][0], pc[i][1]] for i in range(len(pc))]
     pc.sort(key=cmp_to_key(compare), reverse=True)
     standing = [pc[i][0] for i in range(len(pc))]
-    return create_altmetric_distribution(g, standing, articles_list)
+    return create_pca_distribution(g, standing, articles_list)
 
 # It creates the geometric distribution to use in the Montecarlo simulation
-def create_altmetric_distribution(g, standing, articles_list):
+def create_pca_distribution(g, standing, articles_list):
     X = [i+1 for i in range(len(standing))]
     p = 0.2
     geom_pd = geom.pmf(X, p)
@@ -285,6 +314,19 @@ def create_altmetric_distribution(g, standing, articles_list):
         personalized_vector[g.users[elem]] = geom_standing[elem]
 
     return personalized_vector
+
+def create_distribution(g, standing):
+    X = [i + 1 for i in range(len(standing))]
+    p = 0.2
+    geom_pd = geom.pmf(X, p)
+    total_prob = sum(geom_pd)
+    geom_standing = {standing[i]: geom_pd[i] for i in range(len(standing))}
+
+    personalized_vector = [0.0 for _ in range(g.count)]
+    for elem in geom_standing:
+        personalized_vector[g.users[elem]] = float(geom_standing[elem] / total_prob)
+
+    return
 
 
 
