@@ -13,7 +13,13 @@ chomp = "Objects"
 
 # Save an object of the class graph locally
 def save(filename, object, mode):
-    new_chomp = chomp + "\Twitter\\" if mode == "twitter" else chomp + "\PubMed\\"
+    if mode == "twitter":
+        new_chomp = chomp + "\Twitter\\"
+    elif mode == "PubMed":
+        new_chomp = chomp + "\PubMed\\"
+    else:
+        new_chomp = chomp + "\Tennis\\"
+
     try:
         file_to_store = open(new_chomp + filename + ".pickle", "wb")
         pickle.dump(object, file_to_store)
@@ -25,7 +31,13 @@ def save(filename, object, mode):
 
 # Load an object of the class graph locally
 def load(filename, mode):
-    new_chomp = chomp + "\Twitter\\" if mode == "twitter" else chomp + "\PubMed\\"
+    if mode == "twitter":
+        new_chomp = chomp + "\Twitter\\"
+    elif mode == "PubMed":
+        new_chomp = chomp + "\PubMed\\"
+    else:
+        new_chomp = chomp + "\Tennis\\"
+
     try:
         file_to_read = open(new_chomp + filename + ".pickle", "rb")
         loaded_object = pickle.load(file_to_read)
@@ -69,7 +81,8 @@ def pca_analysis(g, mode = 0):
                     x=columns,
                     y=columns)
     fig.update_layout(font=dict(size=18))
-    fig.show()
+    # fig.show()
+
     if mode:
         pca = PCA()
         principalComponents = pca.fit_transform(x)

@@ -167,10 +167,14 @@ class PubMed(Graph):
             total += personalized_vector[self.users[elem]]
         self.personalized_vector = [val / total for val in personalized_vector]
 
-    def compute_standings(self, invariant = None):
+    def compute_standings(self, invariant = None, mode = 1):
         invariant = invariant if invariant is not None else self.invariant
-        order = sorted(enumerate(invariant), key=lambda x: x[1], reverse=True)
-        myorder = [self.reverse_users[order[i][0]] for i in range(self.count)]
+        if mode:
+            order = sorted(enumerate(invariant), key=lambda x: x[1], reverse=True)
+            myorder = [self.reverse_users[order[i][0]] for i in range(self.count)]
+        else:
+            order = sorted(enumerate(invariant), key=lambda x: x[1][1], reverse=True)
+            myorder = [order[i][1][0] for i in range(self.count)]
 
         real_objects = set(self.real_standings)
         aux_myorder = []
@@ -258,9 +262,65 @@ class Twitter(Graph):
         self.personalized_dict = dict(zip(self.users, [1/self.count] * len(self.users)))
         self.personalized_vector = [1/self.count for _ in range(self.count)]
 
-    def compute_standings(self):
-        order = sorted(enumerate(self.invariant), key=lambda x: x[1], reverse=True)
-        self.myorder = [self.reverse_users[order[i][0]] for i in range(self.count)]
+    def compute_standings(self, mode = 1):
+        if mode:
+            order = sorted(enumerate(self.invariant), key=lambda x: x[1], reverse=True)
+            self.myorder = [self.reverse_users[order[i][0]] for i in range(self.count)]
+        else:
+            order = sorted(enumerate(self.invariant), key=lambda x: x[1][1], reverse=True)
+            self.myorder = [order[i][1][0] for i in range(self.count)]
+
+
+
+
+# Subclass Twitter of the class Graph
+class Tennis(Graph):
+    def __init__(self, df, mode = None, threshold = 0):
+        super().__init__(df, mode, threshold)
+
+        self.compute_personalized()
+        self.montecarlo()
+        self.compute_standings()
+
+    # It simulates a Montecarlo Random walk to approximate the invariant probability distribution of the matrix
+    def montecarlo(self, show=1):
+        steps = 1000000
+        pi = np.array([0 for _ in range(self.count)])
+        start_state = random.randint(0, self.count - 1)
+        pi[start_state] = 1
+        prev_state = start_state
+        alpha = 0.15
+        choice = [i for i in range(self.count)]
+        for i in range(steps):
+            if (i % 100000 == 0):
+                print(i)
+            threshold = random.random()
+            if threshold < alpha:
+                curr_state = np.random.choice(choice, p=self.personalized_vector)
+            else:
+                curr_state = np.random.choice(choice, p=self.markovmatrix[:, prev_state])
+            pi[curr_state] += 1
+            prev_state = curr_state
+
+        self.invariant = pi / steps
+
+        if show:
+            self.print_invariant(10)
+        return self.invariant
+
+    # It computes the probability distribution to be used in the Montecarlo simulation
+    def compute_personalized(self):
+        self.personalized_dict = dict(zip(self.users, [1/self.count] * len(self.users)))
+        self.personalized_vector = [1/self.count for _ in range(self.count)]
+
+    def compute_standings(self, mode = 1):
+        if mode:
+            order = sorted(enumerate(self.invariant), key=lambda x: x[1], reverse=True)
+            self.myorder = [self.reverse_users[order[i][0]] for i in range(self.count)]
+        else:
+            order = sorted(enumerate(self.invariant), key=lambda x: x[1][1], reverse=True)
+            self.myorder = [order[i][1][0] for i in range(self.count)]
+
 
 
 
