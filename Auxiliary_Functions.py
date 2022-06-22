@@ -170,11 +170,17 @@ def create_pca_distribution(g, standing, articles_list):
     return personalized_vector
 
 def create_distribution(g, standing):
-    X = [i + 1 for i in range(len(standing))]
+    # Use only the nodes that are present in the network
+    new_standing = []
+    for elem in standing:
+        if elem in g.users:
+            new_standing.append(elem)
+
+    X = [i + 1 for i in range(len(new_standing))]
     p = 0.2
     geom_pd = geom.pmf(X, p)
     total_prob = sum(geom_pd)
-    geom_standing = {standing[i]: geom_pd[i] for i in range(len(standing))}
+    geom_standing = {new_standing[i]: geom_pd[i] for i in range(len(new_standing))}
 
     personalized_vector = [0.0 for _ in range(g.count)]
     for elem in geom_standing:

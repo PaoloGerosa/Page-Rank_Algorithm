@@ -272,6 +272,9 @@ class Twitter(Graph):
 
 
 
+ranking = ["Medvedev D.","Zverev A.","Djokovic N.","Nadal R.","Ruud C.","Tsitsipas S.","Alcaraz C.","Rublev A.",
+"Auger-Aliassime F.","Berrettini M.","Norrie C.","Hurkacz H.","Sinner J.","Fritz T.","Shapovalov D.","Schwartzman D.",
+"Cilic M.","Opelka R.","Carreno Busta P.","Bautista Agut R."]
 
 # Subclass Twitter of the class Graph
 class Tennis(Graph):
@@ -311,7 +314,8 @@ class Tennis(Graph):
     # It computes the probability distribution to be used in the Montecarlo simulation
     def compute_personalized(self):
         self.personalized_dict = dict(zip(self.users, [1/self.count] * len(self.users)))
-        self.personalized_vector = [1/self.count for _ in range(self.count)]
+        # self.personalized_vector = [1/self.count for _ in range(self.count)]
+        self.personalized_vector = create_distribution(self, ranking)
 
     def compute_standings(self, mode = 1):
         if mode:
