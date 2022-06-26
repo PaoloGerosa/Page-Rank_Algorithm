@@ -17,6 +17,9 @@ from Auxiliary_Functions import load, personalized_altmetric, pca_analysis
 
 df = pd.read_csv("Files\\2022.csv")
 g = tennis_graph(df, "tennis_2022")
+
+g.multiple_pagerank([g.personalized_vector, g.personalized_follower_vector, g.personalized_grass_vector])
+g.compute_standings()
 print(g.myorder)
 
 

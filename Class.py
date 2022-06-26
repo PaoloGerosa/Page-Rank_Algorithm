@@ -276,30 +276,39 @@ ranking = ["Medvedev D.","Zverev A.","Djokovic N.","Nadal R.","Ruud C.","Tsitsip
 "Auger-Aliassime F.","Berrettini M.","Norrie C.","Hurkacz H.","Sinner J.","Fritz T.","Shapovalov D.","Schwartzman D.",
 "Cilic M.","Opelka R.","Carreno Busta P.","Bautista Agut R."]
 
+followers_ranking = ["Nadal R.","Djokovic N.","Federer R.","Zverev A.","Tsitsipas S.","Thiem D.","Berrettini M.","Wawrinka S.",
+"Dimitrov G.","Medvedev D.","Monfils G.","Schwartzman D.","Fognini F.","Shapovalov D.","Sinner Y.","Nishikori K.",
+"Paire B.","Auger-Aliassime F.","Raonic M.","Alcaraz C.","Rublev A.","Goffin D.","Khachanov K.","Coric B."]
+
+grass_ranking = ["Djokovic N.","Nadal R.","Hurkacz H.","Auger-Aliassime F.","Shapovalov D.","Berrettini M.",
+"Medvedev D.","Kyrgios N.","Alcaraz C.","Tsitsipas S.","Zverev A.","Sinner J.","Carreno Busta P.","Schwartzman D.",
+"Bautista Agut R.","Rublev A.","Ruud C.","Norrie C.","Fritz T.","Cilic M.","Opelka R."]
+
 # Subclass Twitter of the class Graph
 class Tennis(Graph):
     def __init__(self, df, mode = None, threshold = 0):
         super().__init__(df, mode, threshold)
 
         self.compute_personalized()
-        self.montecarlo()
-        self.compute_standings()
+        #self.multiple_pagerank([self.personalized_vector, self.personalized_follower_vector])
+        #self.compute_standings()
 
     # It simulates a Montecarlo Random walk to approximate the invariant probability distribution of the matrix
-    def montecarlo(self, show=1):
-        steps = 1000000
+    def multiple_pagerank(self, personalized_list_vector):
+        steps = 200000
+        m = len(personalized_list_vector)
         pi = np.array([0 for _ in range(self.count)])
         start_state = random.randint(0, self.count - 1)
         pi[start_state] = 1
         prev_state = start_state
-        alpha = 0.15
+        alpha = 0.5
+        gamma = alpha / m
         choice = [i for i in range(self.count)]
         for i in range(steps):
-            if (i % 100000 == 0):
-                print(i)
             threshold = random.random()
             if threshold < alpha:
-                curr_state = np.random.choice(choice, p=self.personalized_vector)
+                index = int(threshold // gamma)
+                curr_state = np.random.choice(choice, p=personalized_list_vector[index])
             else:
                 curr_state = np.random.choice(choice, p=self.markovmatrix[:, prev_state])
             pi[curr_state] += 1
@@ -307,15 +316,13 @@ class Tennis(Graph):
 
         self.invariant = pi / steps
 
-        if show:
-            self.print_invariant(10)
-        return self.invariant
-
     # It computes the probability distribution to be used in the Montecarlo simulation
     def compute_personalized(self):
         self.personalized_dict = dict(zip(self.users, [1/self.count] * len(self.users)))
         # self.personalized_vector = [1/self.count for _ in range(self.count)]
         self.personalized_vector = create_distribution(self, ranking)
+        self.personalized_follower_vector = create_distribution(self, followers_ranking)
+        self.personalized_grass_vector = create_distribution(self, grass_ranking)
 
     def compute_standings(self, mode = 1):
         if mode:
