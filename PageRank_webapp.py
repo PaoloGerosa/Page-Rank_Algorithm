@@ -40,13 +40,13 @@ if st.button("Submit"):
     result = result.lower()
     result = result.strip()
     start_search = st.success(f'Starting search of {result}. Take a cup of coffee and come back in few minutes')
-    if result not in Formula:
-        progress_bar = st.progress(0)
-        pubmed_graph(result, progress_bar)
-        progress_bar.empty()
-        Formula.append(result)
-    else:
-        time.sleep(1.5)
+    #if result not in Formula:
+    progress_bar = st.progress(0)
+    pubmed_graph(result, progress_bar)
+    progress_bar.empty()
+    Formula.append(result)
+    #else:
+    #    time.sleep(1.5)
     start_search.empty()
     end_search = st.success(f'Congratulation, the search {result} is completed')
     time.sleep(1.5)
