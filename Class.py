@@ -326,7 +326,7 @@ def create_distribution(g, standing):
     for elem in geom_standing:
         personalized_vector[g.users[elem]] = float(geom_standing[elem] / total_prob)
 
-    return
+    return personalized_vector
 
 
 
