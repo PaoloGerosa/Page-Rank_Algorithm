@@ -60,8 +60,8 @@ def get_citations(id, articles, name):
     for page in range(1, pages+1):
         link = constructLink(id, page = page, mode = 0)
         soup = get_soup(link)
-        main_text = soup.find('div', class_="search-results", id="search-results")
-        main_text = main_text.find('section', class_="search-results-list")
+        # main_text = soup.find('div', class_="search-results", id="search-results")
+        main_text = soup.find('section', class_="search-results-list")
         for article in main_text.find_all('article', class_="full-docsum"):
             article = article.find('div', class_="docsum-wrap").div.a
             article_name = article.text.strip()
