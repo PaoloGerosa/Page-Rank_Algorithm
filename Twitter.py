@@ -1,13 +1,7 @@
 # Import Libraries to create a Graph object and to save it in local
 from Class import Twitter
 from Auxiliary_Functions import save
-import tweepy
 from Credentials import *
-
-# Call to the API of Twitter: Tweepy
-auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_token, access_token_secret)
-api = tweepy.API(auth, wait_on_rate_limit=True)
 
 # It generates a Graph object using a twitter dataframe derived from Gephi
 def twitter_graph(df, save_term, threshold = 0):
