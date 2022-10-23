@@ -78,13 +78,13 @@ def search(search):
             if article_name not in dict_of_articles:
                 dict_of_articles[article_name] = Publication(article_name, further_link, description, author, doi)
                 standings.append(article_name)
-                get_citations(further_link, articles, article_name)
+                get_citations(article_name, further_link, articles, article_name)
     return pd.DataFrame(articles, columns =['Source', 'Target']), standings, dict_of_articles
 
 # Given the id of an article it finds all the citations of that article
 # The id is found in the HTML of the article
 # The function is similar to search because HTML is similar, but careful that in the loop we don't save same information
-def get_citations(id, articles, name):
+def get_citations(article_info, id, articles, name):
     link = constructLink(id, page = 1, mode = 0)
     soup = get_soup(link)
     pages = get_total_page(soup)
@@ -94,7 +94,7 @@ def get_citations(id, articles, name):
         soup = get_soup(link)
         # main_text = soup.find('div', class_="search-results", id="search-results")
         main_text = soup.find('section', class_="search-results-list")
-        for article in main_text.find_all('article', class_="full-docsum"):
+        for article in soup.find_all('article', class_="full-docsum"):
             article = article.find('div', class_="docsum-wrap").div.a
             article_name = article.text.strip()
             if name != article_name:
