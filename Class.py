@@ -5,23 +5,24 @@ import networkx as nx
 import requests
 from Auxiliary_Functions import personalized_altmetric, create_distribution
 
+
 class Graph:
-    def __init__(self, df, mode = None, threshold = 0):
-        self.count = 0                              # Number of nodes in the graph
-        self.inner_graph = dict()                   # Directed graph with inverted edges
-        self.users = dict()                         # Elements of the graph associated to their indeces in the matrix
-        self.reverse_users = []                     # Ordered users
-        self.column_sums = []                       # Sums of the boolean elements in the columns to build markovmatrix
-        self.invariant = []                         # Invariant probability distribution
+    def __init__(self, df, mode=None, threshold=0):
+        self.count = 0  # Number of nodes in the graph
+        self.inner_graph = dict()  # Directed graph with inverted edges
+        self.users = dict()  # Elements of the graph associated to their indeces in the matrix
+        self.reverse_users = []  # Ordered users
+        self.column_sums = []  # Sums of the boolean elements in the columns to build markovmatrix
+        self.invariant = []  # Invariant probability distribution
         self.personalized_vector = []
         self.personalized_dict = dict()
-        self.myorder = []                           # My standings according to the algorithm
+        self.myorder = []  # My standings according to the algorithm
 
         ## Graph data structures
         self.graph = dict()
         self.create_graph(df, mode, threshold)
         self.matrix = [[0 for _ in range(self.count)] for _ in range(self.count)]
-        self.markovmatrix = []                      # Numpy matrix that represents the Google matrix
+        self.markovmatrix = []  # Numpy matrix that represents the Google matrix
         self.create_adjacency_matrix()
 
     # It creates the graph from a dataframe
@@ -88,7 +89,7 @@ class Graph:
             else:
                 for j in range(self.count):
                     if self.markovmatrix[j, i]:
-                        self.markovmatrix[j][i] = float(1/self.column_sums[i])
+                        self.markovmatrix[j][i] = float(1 / self.column_sums[i])
 
     # Print some information of the graph
     def print_details(self):
@@ -117,18 +118,18 @@ class Graph:
             print(self.myorder[i])
 
 
-
 api = "http://api.altmetric.com/v1/doi/"
+
 
 # Subclass PubMed of the class Graph
 class PubMed(Graph):
-    def __init__(self, df, dict_of_publications, query, standings, mode = None, threshold = 0):
+    def __init__(self, df, dict_of_publications, query, standings, mode=None, threshold=0):
         super().__init__(df, mode, threshold)
         self.query = query
         self.publications = dict_of_publications
-        self.real_standings = standings                     # Standings of objects in the real context (Twitter, Pubmed)
-        self.combo_order = []                               # In PubMed Standings according to the algorithm combination of PageRank and Best Match sort
-        self.multiple_order = []                            # Ranking with multiple pagerank algorithm
+        self.real_standings = standings  # Standings of objects in the real context (Twitter, Pubmed)
+        self.combo_order = []  # In PubMed Standings according to the algorithm combination of PageRank and Best Match sort
+        self.multiple_order = []  # Ranking with multiple pagerank algorithm
 
         self.add_info()
         self.altmetric_personalized_vector = personalized_altmetric(self)
@@ -136,7 +137,8 @@ class PubMed(Graph):
         self.compute_personalized()
         self.montecarlo()
         self.myorder = self.compute_standings()
-        self.generalized_order = self.multiple_pagerank([self.altmetric_personalized_vector, self.pubmed_personalized_vector])
+        self.generalized_order = self.multiple_pagerank(
+            [self.altmetric_personalized_vector, self.pubmed_personalized_vector])
         self.combo_orders()
 
     def add_info(self):
@@ -167,7 +169,7 @@ class PubMed(Graph):
             total += personalized_vector[self.users[elem]]
         self.personalized_vector = [val / total for val in personalized_vector]
 
-    def compute_standings(self, invariant = None, mode = 1):
+    def compute_standings(self, invariant=None, mode=1):
         invariant = invariant if invariant is not None else self.invariant
         if mode:
             order = sorted(enumerate(invariant), key=lambda x: x[1], reverse=True)
@@ -230,7 +232,7 @@ class PubMed(Graph):
         pi[start_state] = 1
         prev_state = start_state
         alpha = 0.15
-        gamma = alpha/m
+        gamma = alpha / m
         choice = [i for i in range(self.count)]
         for i in range(steps):
             threshold = random.random()
@@ -247,10 +249,9 @@ class PubMed(Graph):
         return order
 
 
-
 # Subclass Twitter of the class Graph
 class Twitter(Graph):
-    def __init__(self, df, mode = None, threshold = 0):
+    def __init__(self, df, mode=None, threshold=0):
         super().__init__(df, mode, threshold)
 
         self.compute_personalized()
@@ -259,10 +260,10 @@ class Twitter(Graph):
 
     # It computes the probability distribution to be used in the Montecarlo simulation
     def compute_personalized(self):
-        self.personalized_dict = dict(zip(self.users, [1/self.count] * len(self.users)))
-        self.personalized_vector = [1/self.count for _ in range(self.count)]
+        self.personalized_dict = dict(zip(self.users, [1 / self.count] * len(self.users)))
+        self.personalized_vector = [1 / self.count for _ in range(self.count)]
 
-    def compute_standings(self, mode = 1):
+    def compute_standings(self, mode=1):
         if mode:
             order = sorted(enumerate(self.invariant), key=lambda x: x[1], reverse=True)
             self.myorder = [self.reverse_users[order[i][0]] for i in range(self.count)]
@@ -271,27 +272,32 @@ class Twitter(Graph):
             self.myorder = [order[i][1][0] for i in range(self.count)]
 
 
+ranking = ["Medvedev D.", "Zverev A.", "Djokovic N.", "Nadal R.", "Ruud C.", "Tsitsipas S.", "Alcaraz C.", "Rublev A.",
+           "Auger-Aliassime F.", "Berrettini M.", "Norrie C.", "Hurkacz H.", "Sinner J.", "Fritz T.", "Shapovalov D.",
+           "Schwartzman D.",
+           "Cilic M.", "Opelka R.", "Carreno Busta P.", "Bautista Agut R."]
 
-ranking = ["Medvedev D.","Zverev A.","Djokovic N.","Nadal R.","Ruud C.","Tsitsipas S.","Alcaraz C.","Rublev A.",
-"Auger-Aliassime F.","Berrettini M.","Norrie C.","Hurkacz H.","Sinner J.","Fritz T.","Shapovalov D.","Schwartzman D.",
-"Cilic M.","Opelka R.","Carreno Busta P.","Bautista Agut R."]
+followers_ranking = ["Nadal R.", "Djokovic N.", "Federer R.", "Zverev A.", "Tsitsipas S.", "Thiem D.", "Berrettini M.",
+                     "Wawrinka S.",
+                     "Dimitrov G.", "Medvedev D.", "Monfils G.", "Schwartzman D.", "Fognini F.", "Shapovalov D.",
+                     "Sinner Y.", "Nishikori K.",
+                     "Paire B.", "Auger-Aliassime F.", "Raonic M.", "Alcaraz C.", "Rublev A.", "Goffin D.",
+                     "Khachanov K.", "Coric B."]
 
-followers_ranking = ["Nadal R.","Djokovic N.","Federer R.","Zverev A.","Tsitsipas S.","Thiem D.","Berrettini M.","Wawrinka S.",
-"Dimitrov G.","Medvedev D.","Monfils G.","Schwartzman D.","Fognini F.","Shapovalov D.","Sinner Y.","Nishikori K.",
-"Paire B.","Auger-Aliassime F.","Raonic M.","Alcaraz C.","Rublev A.","Goffin D.","Khachanov K.","Coric B."]
+grass_ranking = ["Djokovic N.", "Nadal R.", "Hurkacz H.", "Auger-Aliassime F.", "Shapovalov D.", "Berrettini M.",
+                 "Medvedev D.", "Kyrgios N.", "Alcaraz C.", "Tsitsipas S.", "Zverev A.", "Sinner J.",
+                 "Carreno Busta P.", "Schwartzman D.",
+                 "Bautista Agut R.", "Rublev A.", "Ruud C.", "Norrie C.", "Fritz T.", "Cilic M.", "Opelka R."]
 
-grass_ranking = ["Djokovic N.","Nadal R.","Hurkacz H.","Auger-Aliassime F.","Shapovalov D.","Berrettini M.",
-"Medvedev D.","Kyrgios N.","Alcaraz C.","Tsitsipas S.","Zverev A.","Sinner J.","Carreno Busta P.","Schwartzman D.",
-"Bautista Agut R.","Rublev A.","Ruud C.","Norrie C.","Fritz T.","Cilic M.","Opelka R."]
 
 # Subclass Twitter of the class Graph
 class Tennis(Graph):
-    def __init__(self, df, mode = None, threshold = 0):
+    def __init__(self, df, mode=None, threshold=0):
         super().__init__(df, mode, threshold)
 
         self.compute_personalized()
-        #self.multiple_pagerank([self.personalized_vector, self.personalized_follower_vector])
-        #self.compute_standings()
+        # self.multiple_pagerank([self.personalized_vector, self.personalized_follower_vector])
+        # self.compute_standings()
 
     # It simulates a Montecarlo Random walk to approximate the invariant probability distribution of the matrix
     def multiple_pagerank(self, personalized_list_vector):
@@ -318,22 +324,19 @@ class Tennis(Graph):
 
     # It computes the probability distribution to be used in the Montecarlo simulation
     def compute_personalized(self):
-        self.personalized_dict = dict(zip(self.users, [1/self.count] * len(self.users)))
+        self.personalized_dict = dict(zip(self.users, [1 / self.count] * len(self.users)))
         # self.personalized_vector = [1/self.count for _ in range(self.count)]
         self.personalized_vector = create_distribution(self, ranking)
         self.personalized_follower_vector = create_distribution(self, followers_ranking)
         self.personalized_grass_vector = create_distribution(self, grass_ranking)
 
-    def compute_standings(self, mode = 1):
+    def compute_standings(self, mode=1):
         if mode:
             order = sorted(enumerate(self.invariant), key=lambda x: x[1], reverse=True)
             self.myorder = [self.reverse_users[order[i][0]] for i in range(self.count)]
         else:
             order = sorted(enumerate(self.invariant), key=lambda x: x[1][1], reverse=True)
             self.myorder = [order[i][1][0] for i in range(self.count)]
-
-
-
 
 
 class Publication:
@@ -344,5 +347,3 @@ class Publication:
         self.authors = authors
         self.doi = doi
         self.details = None
-
-
