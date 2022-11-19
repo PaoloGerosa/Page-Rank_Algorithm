@@ -276,7 +276,7 @@ def pca_analysis(g):
     try:
         x = MinMaxScaler().fit_transform(x)
     except:
-        x = StandardScaler().fit_transform(x)
+        pass
 
     pca = PCA(n_components=2)
     principalComponents = pca.fit_transform(x)
