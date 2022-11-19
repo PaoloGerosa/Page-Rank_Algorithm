@@ -273,8 +273,10 @@ def pca_analysis(g):
     features = columns
     x = details_df.loc[:, features].values
     # Standardizing the features
-    print(x)
-    x = MinMaxScaler().fit_transform(x)
+    try:
+        x = MinMaxScaler().fit_transform(x)
+    except:
+        x = StandardScaler().fit_transform(x)
 
     pca = PCA(n_components=2)
     principalComponents = pca.fit_transform(x)
